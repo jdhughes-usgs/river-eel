@@ -1,9 +1,11 @@
 language: python
+sudo: false #true
+dist: trusty
+
 
 compiler:
   - gcc
 
-sudo: false #true
 
 matrix:
   include:
