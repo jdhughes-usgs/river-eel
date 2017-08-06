@@ -24,6 +24,22 @@ def test_create_bindir():
     return
 
 
+def test_create_tempdir():
+    pth = os.path.join('temp')
+
+    # remove temp directory if it exists
+    if os.path.exists(pth):
+        print('removing...{}'.format(pth))
+        shutil.rmtree(pth)
+    # create temp directory
+    print('creating...{}'.format(pth))
+    os.makedirs(pth)
+
+    msg = 'could not create {}'.format(pth)
+    assert os.path.exists(pth), msg
+    return
+
+
 def test_build_modflow():
     fct = fc
     cct = cc
@@ -365,9 +381,10 @@ def build(srcdir, srcdir2, target, starget, extrafiles=None):
 
 if __name__ == "__main__":
     # test_create_bindir()
+    test_create_tempdir()
     # test_build_modflow()
     # test_build_mfnwt()
     # test_build_usg()
     # test_build_modflow6()
-    test_build_mf5to6()
-    test_build_zonebudget()
+    # test_build_mf5to6()
+    # test_build_zonebudget()
