@@ -1,6 +1,5 @@
 import os
 import sys
-import nose
 
 import time
 import shutil

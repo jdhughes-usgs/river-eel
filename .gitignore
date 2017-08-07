@@ -49,6 +49,9 @@ bin/mf6
 bin/mf5to6
 bin/zbud6
 
+doc/mf6io/*.pdf
+*.blg
+
 tmp_simulations/
 autotest/temp/
 autotest/*.html
