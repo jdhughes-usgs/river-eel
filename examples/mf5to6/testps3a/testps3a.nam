@@ -1,0 +1,12 @@
+list           2 testps3a.lst
+dis            3 testps3a.dis
+bas6           4 testps3a.ba6
+wel           12 testps3a.wel
+riv           14 testps3a.riv
+rch           18 testps3a.rch
+oc            22 testps3a.oc
+pcg           23 testps3a.pcg
+lpf           33 testps3a.lpf
+data(binary)  50 testps3a.hds     replace
+data(binary)  52 testps3a.ddn     replace
+data(binary)  53 testps3base.hed  old

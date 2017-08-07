@@ -1,0 +1,42 @@
+# Name File for MODFLOW 
+LIST         11   test9.5-3layer.lst       REPLACE
+DATA(BINARY)  9   test9.5-3layer.cbc       REPLACE
+#
+HOB          90   test9.5-3layer.hob
+DATA         91   test9.5-3layer.hob_out   REPLACE
+#
+DIS          12   test9.5-3layer.dis       OLD
+BAS6         13   test9.5-3layer.bas       OLD
+OC           39   test9.5-3layer.oc        OLD
+DATA(BINARY) 37   test9.5-3layer.hds       REPLACE
+DATA         38   test9.5-3layer.fdn       REPLACE
+PCG          18   test9.5-3layer.pcg       OLD
+LPF          14   test9.5-3layer.lpf       OLD
+WEL          20   test9.5-3layer.wel       OLD
+RCH          24   test9.5-3layer.rch       OLD
+ZONE         15   test9.5-3layer.zon       OLD
+MULT         16   test9.5-3layer.mlt       OLD
+PVAL         52   test9.5-3layer.pval      OLD
+#
+RIV          21   test9.5-3layer.riv       OLD
+RVOB         48   test9.5-3layer.rvob      OLD
+DATA         49   test9.5-3layer.rvob_out  REPLACE
+#
+GHB          19   test9.5-3layer.ghb       OLD
+GBOB         53   test9.5-3layer.gbob      OLD
+data         54   test9.5-3layer.gbob_out  REPLACE
+#
+DRN          55   test9.5-3layer.drn       OLD
+DROB         56   test9.5-3layer.drob      OLD
+data         57   test9.5-3layer.drob_out  REPLACE
+#
+CHOB         58   test9.5-3layer.chob      OLD
+data         59   test9.5-3layer.chob_out  REPLACE
+#
+# also need to support and test: 
+#   DTOB
+#   STOB
+#   CHOB (when constant heads are defined by IBOUND < 0)
+#   CHOB (when CHD is listed in the name file)
+#   CHOB (when constant heads are defined by IBOUND < 0 **AND** CHD is listed in the name file)
+#

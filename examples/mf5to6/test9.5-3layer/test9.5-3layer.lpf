@@ -1,0 +1,37 @@
+# LPF: Layer Property Flow package file created on 3/17/2009 by ModelMuse version 1.0.9.0.
+ 9   2.0E+30  7 # ILPFCB, HDRY, NPLPF
+ 0  0  0        # LAYTYP
+ 0  0  0        # LAYAVG
+ 1.0  1.0  1.0  # CHANI
+ 1  1  1        # LAYVKA
+ 0  0  0        # LAYWET
+HK_1 HK 3.0E-4  1  # PARNAM, PARTYP, PARVAL, NCLU
+ 1 NONE ALL     1  # Layer, MLTARR, ZONARR IZ
+HK_2 HK 1.0E-7  1  # PARNAM, PARTYP, PARVAL, NCLU
+ 2 HK_2_M2 ALL  1  # Layer, MLTARR, ZONARR IZ
+HK_3 HK 4.0E-5  1  # PARNAM, PARTYP, PARVAL, NCLU
+ 3 HK_2_M2 ALL  1  # Layer, MLTARR, ZONARR IZ
+VANI VANI 1.0   3  # PARNAM, PARTYP, PARVAL, NCLU
+ 1 NONE ALL        # Layer, MLTARR, ZONARR
+ 2 NONE ALL        # Layer, MLTARR, ZONARR
+ 3 NONE ALL        # Layer, MLTARR, ZONARR
+SS_1 SS 2.6E-5  1  # PARNAM, PARTYP, PARVAL, NCLU
+ 1 NONE ALL     1  # Layer, MLTARR, ZONARR IZ
+SS_2 SS 4.0E-7  1  # PARNAM, PARTYP, PARVAL, NCLU
+ 2 NONE ALL     1  # Layer, MLTARR, ZONARR IZ
+SS_3 SS 4.0E-6  1  # PARNAM, PARTYP, PARVAL, NCLU
+ 3 NONE ALL     1  # Layer, MLTARR, ZONARR IZ
+ 12  # HK Upper Aquifer Layer 1
+ 12  # HANI Upper Aquifer Layer 1
+ 12  # VKA Upper Aquifer Layer 1
+ 12  # SS Upper Aquifer Layer 1
+ 12  # VKCB Middle Confining Unit Layer 1
+ 12  # HK Upper Aquifer Layer 2
+ 12  # HANI Upper Aquifer Layer 2
+ 12  # VKA Upper Aquifer Layer 2
+ 12  # SS Upper Aquifer Layer 2
+ 12  # VKCB Middle Confining Unit Layer 2
+ 12  # HK Lower Aquifer Layer 3
+ 12  # HANI Lower Aquifer Layer 3
+ 12  # VKA Lower Aquifer Layer 3
+ 12  # SS Lower Aquifer Layer 3

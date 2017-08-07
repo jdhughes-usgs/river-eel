@@ -1,0 +1,9 @@
+ 1  1  5  57                      # Item 1. NQDR NQCDR NQTDR IUDROBSV
+ 1.0                              # Item 2. TOMULTDR
+ 5  1                             # Item 3. NQOBDR NQCLDR
+DRNflow_1  1  1.0           0.0   # Item 4. OBSNAM IREFSP TOFFSET FLWOBS
+DRNflow_2  2  8.7162E+4     0.0
+DRNflow_3  3  2.61486E+5    0.0
+DRNflow_4  4  5.22972E+5    0.0
+DRNflow_5  5  2.3567451E+7  0.0
+ 1  18  4  1.0                    # Item 5. Layer Row Column Factor

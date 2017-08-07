@@ -1,0 +1,7 @@
+1   0                  # Item 2. MXACTD IDRNCB
+1   0                  # Item 5. ITMP NP, stress period 1
+1  18  4  110.0  10.0  # Item 6. Layer Row Column Elevation Cond
+-1  0                  # Item 5. ITMP NP, stress period 2
+-1  0                  # Item 5. ITMP NP, stress period 3
+-1  0                  # Item 5. ITMP NP, stress period 4
+-1  0                  # Item 5. ITMP NP, stress period 5
