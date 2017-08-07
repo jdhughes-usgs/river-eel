@@ -53,4 +53,5 @@ script:
     - ls -l
     - mkdir ./temp
     - ls -l
+    - ls -d -1 $PWD/*
     - nosetests -v

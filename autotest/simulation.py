@@ -56,8 +56,10 @@ class Simulation(object):
         print(msg)
         self.originpath = src
         self.simpath = dst
+        # write message
+        print('running pymake.setup_mf6 from ' +
+              '{}'.format(os.path.abspath(os.getcwd())))
         try:
-            print('running pymake.setup_mf6')
             self.inpt, self.outp = pymake.setup_mf6(src=src, dst=dst)
             print('waiting...')
             time.sleep(0.5)
