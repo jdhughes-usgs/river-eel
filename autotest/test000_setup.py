@@ -8,35 +8,21 @@ fc = 'gfortran'
 cc = 'gcc'
 
 
-def test_create_bindir():
-    pth = os.path.join('..', 'bin')
+def test_create_testdirs():
+    pths = [os.path.join('..', 'bin'),
+            os.path.join('temp')]
 
-    # remove bin directory if it exists
-    if os.path.exists(pth):
-        print('removing...{}'.format(pth))
-        shutil.rmtree(pth)
-    # create bin directory
-    print('creating...{}'.format(pth))
-    os.makedirs(pth)
+    for pth in pths:
+        # remove pth directory if it exists
+        if os.path.exists(pth):
+            print('removing...{}'.format(pth))
+            shutil.rmtree(pth)
+        # create pth directory
+        print('creating...{}'.format(pth))
+        os.makedirs(pth)
 
-    msg = 'could not create {}'.format(pth)
-    assert os.path.exists(pth), msg
-    return
-
-
-def test_create_tempdir():
-    pth = os.path.join('temp')
-
-    # remove temp directory if it exists
-    if os.path.exists(pth):
-        print('removing...{}'.format(pth))
-        shutil.rmtree(pth)
-    # create temp directory
-    print('creating...{}'.format(pth))
-    os.makedirs(pth)
-
-    msg = 'could not create {}'.format(pth)
-    assert os.path.exists(pth), msg
+        msg = 'could not create {}'.format(pth)
+        assert os.path.exists(pth), msg
     return
 
 
@@ -380,8 +366,7 @@ def build(srcdir, srcdir2, target, starget, extrafiles=None):
 
 
 if __name__ == "__main__":
-    # test_create_bindir()
-    test_create_tempdir()
+    test_create_testdirs()
     # test_build_modflow()
     # test_build_mfnwt()
     # test_build_usg()
