@@ -4,8 +4,13 @@ import subprocess
 
 
 def test_build_mfio():
+    opth = os.getcwd()
+
     # set path to document files
-    pth = os.path.join('..', 'doc', 'mf6io')
+    npth = os.path.join('..', 'doc', 'mf6io')
+    os.chdir(npth)
+
+    pth = './'
 
     # remove existing files
     files = ['mf6io.nightlybuild.pdf', 'mf6io.nightlybuild.aux',
@@ -31,6 +36,9 @@ def test_build_mfio():
 
     msg = 'mf6io.nightlybuild.pdf does not exist'
     assert os.path.isfile(os.path.join(pth, 'mf6io.nightlybuild.pdf')), msg
+
+    # change back to starting directory
+    os.chdir(opth)
 
     return
 
