@@ -57,14 +57,16 @@ class Simulation(object):
         self.originpath = src
         self.simpath = dst
         try:
+            print('running pymake.setup_mf6')
             self.inpt, self.outp = pymake.setup_mf6(src=src, dst=dst)
+            print('waiting...')
             time.sleep(0.5)
             success = True
         except:
             success = False
             print('source:      {}'.format(src))
             print('destination: {}'.format(dst))
-        assert success
+        assert success, 'did not run pymake.setup_mf6'
 
         # Copy comparison simulations if available
         if success:

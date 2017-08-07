@@ -50,4 +50,7 @@ install:
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
     - cd autotest
+    - ls -l
+    - mkdir ./temp
+    - ls -l
     - nosetests -v
