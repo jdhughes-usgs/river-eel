@@ -1,6 +1,6 @@
 language: python
 sudo: require
-dist: trusty
+dist: precise #trusty
 
 
 compiler:
