@@ -111,6 +111,7 @@ def run_mf6(sim):
     appropriate MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, or MODFLOW-LGR run.
 
     """
+    print(os.getcwd())
     src = os.path.join(exdir, sim.name)
     dst = os.path.join('temp', sim.name)
     sim.setup(src, dst)

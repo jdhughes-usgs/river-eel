@@ -7,29 +7,32 @@ import pymake
 fc = 'gfortran'
 cc = 'gcc'
 
+def create_dir(pth):
+    # remove pth directory if it exists
+    if os.path.exists(pth):
+        print('removing... {}'.format(os.path.abspath(pth)))
+        shutil.rmtree(pth)
+    # create pth directory
+    print('creating... {}'.format(os.path.abspath(pth)))
+    os.makedirs(pth)
 
-def test_create_testdirs():
+    msg = 'could not create... {}'.format(os.path.abspath(pth))
+    assert os.path.exists(pth), msg
+    
+    return
+
+def test_create_dirs():
     pths = [os.path.join('..', 'bin'),
             os.path.join('temp')]
 
     for pth in pths:
-        # remove pth directory if it exists
-        if os.path.exists(pth):
-            print('removing...{}'.format(pth))
-            shutil.rmtree(pth)
-        # create pth directory
-        print('creating...{}'.format(pth))
-        os.makedirs(pth)
+        create_dir(pth)
 
-        msg = 'could not create {}'.format(pth)
-        assert os.path.exists(pth), msg
     return
 
-
-def test_build_modflow():
+def set_compiler():
     fct = fc
     cct = cc
-    starget = 'MODFLOW-2005'
     # parse command line arguments to see if user specified options
     # relative to building the target
     msg = ''
@@ -52,6 +55,16 @@ def test_build_modflow():
             msg += '{} - '.format(arg.lower()) + \
                    '{} will be built with clang.'.format(starget)
             cct = 'clang'
+    if len(msg) > 0:
+        print(msg)
+        
+    return fct, cct
+
+
+def test_build_modflow():
+    starget = 'MODFLOW-2005'
+
+    fct, cct = set_compiler()
 
     # set up target
     target = os.path.abspath(os.path.join('..', 'bin', 'mf2005dbl'))
@@ -60,7 +73,7 @@ def test_build_modflow():
     cpth = os.getcwd()
 
     # create temporary path
-    dstpth = os.path.join('temp')
+    dstpth = os.path.join('tempbin')
     print('create...{}'.format(dstpth))
     if not os.path.exists(dstpth):
         os.makedirs(dstpth)
@@ -94,31 +107,9 @@ def test_build_modflow():
 
 
 def test_build_mfnwt():
-    fct = fc
-    cct = cc
     starget = 'MODFLOW-NWT'
-    # parse command line arguments to see if user specified options
-    # relative to building the target
-    msg = ''
-    for idx, arg in enumerate(sys.argv):
-        if arg.lower() == '--ifort':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with ifort.'.format(starget)
-            fct = 'ifort'
-        elif arg.lower() == '--cl':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with cl.'.format(starget)
-            cct = 'cl'
-        elif arg.lower() == '--clang':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with clang.'.format(starget)
-            cct = 'clang'
+
+    fct, cct = set_compiler()
 
     # set up target
     target = os.path.abspath(os.path.join('..', 'bin', 'mfnwtdbl'))
@@ -127,7 +118,7 @@ def test_build_mfnwt():
     cpth = os.getcwd()
 
     # create temporary path
-    dstpth = os.path.join('temp')
+    dstpth = os.path.join('tempbin')
     print('create...{}'.format(dstpth))
     if not os.path.exists(dstpth):
         os.makedirs(dstpth)
@@ -161,31 +152,9 @@ def test_build_mfnwt():
 
 
 def test_build_usg():
-    fct = fc
-    cct = cc
     starget = 'MODFLOW-USG'
-    # parse command line arguments to see if user specified options
-    # relative to building the target
-    msg = ''
-    for idx, arg in enumerate(sys.argv):
-        if arg.lower() == '--ifort':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with ifort.'.format(starget)
-            fct = 'ifort'
-        elif arg.lower() == '--cl':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with cl.'.format(starget)
-            cct = 'cl'
-        elif arg.lower() == '--clang':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with clang.'.format(starget)
-            cct = 'clang'
+
+    fct, cct = set_compiler()
 
     # set up target
     target = os.path.abspath(os.path.join('..', 'bin', 'mfusgdbl'))
@@ -194,7 +163,7 @@ def test_build_usg():
     cpth = os.getcwd()
 
     # create temporary path
-    dstpth = os.path.join('temp')
+    dstpth = os.path.join('tempbin')
     print('create...{}'.format(dstpth))
     if not os.path.exists(dstpth):
         os.makedirs(dstpth)
@@ -297,31 +266,14 @@ def build(srcdir, srcdir2, target, starget, extrafiles=None):
     """
     debug = False
     fflags = None
-    fct = fc
-    cct = cc
-    # parse command line arguments to see if user specified options
+
+    fct, cct = set_compiler()
+
+    # parse remaining command line arguments to see if user specified options
     # relative to building the target
     msg = ''
     for idx, arg in enumerate(sys.argv):
-        if arg.lower() == '--ifort':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with ifort.'.format(starget)
-            fct = 'ifort'
-        elif arg.lower() == '--cl':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with cl.'.format(starget)
-            cct = 'cl'
-        elif arg.lower() == '--clang':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with cland.'.format(starget)
-            cct = 'clang'
-        elif arg.lower() == '--debug':
+        if arg.lower() == '--debug':
             debug = True
             msg += '{} - '.format(arg.lower()) + \
                    '{} will be built with debug flags.'.format(starget)
@@ -367,9 +319,10 @@ def build(srcdir, srcdir2, target, starget, extrafiles=None):
 
 if __name__ == "__main__":
     test_create_testdirs()
-    # test_build_modflow()
-    # test_build_mfnwt()
-    # test_build_usg()
-    # test_build_modflow6()
-    # test_build_mf5to6()
-    # test_build_zonebudget()
+    test_build_modflow()
+    test_build_mfnwt()
+    test_build_usg()
+    test_build_modflow6()
+    test_build_mf5to6()
+    test_build_zonebudget()
+    
