@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 
 
@@ -14,19 +15,19 @@ def test_build_mfio():
     # build pdf
     argv = ['pdflatex', 'mf6io.nightlybuild.tex']
     ierr = run_command(argv, pth)
-    assert ierr == None, 'Error on first call to pdflatex'
+    assert ierr == 0, 'Error on first call to pdflatex ({})'.format(ierr)
 
     argv = ['bibtex', 'mf6io.nightlybuild.aux']
     ierr = run_command(argv, pth)
-    assert ierr == None, 'Error on bibtex call'
+    assert ierr == 0, 'Error on bibtex call ({})'.format(ierr)
 
     argv = ['pdflatex', 'mf6io.nightlybuild.tex']
     ierr = run_command(argv, pth)
-    assert ierr == None, 'Error on second call to pdflatex'
+    assert ierr == 0, 'Error on second call to pdflatex ({})'.format(ierr)
 
     argv = ['pdflatex', 'mf6io.nightlybuild.tex']
     ierr = run_command(argv, pth)
-    assert ierr == None, 'Error on third call to pdflatex'
+    assert ierr == 0, 'Error on third call to pdflatex ({})'.format(ierr)
 
     msg = 'mf6io.nightlybuild.pdf does not exist'
     assert os.path.isfile(os.path.join(pth, 'mf6io.nightlybuild.pdf')), msg
@@ -48,20 +49,31 @@ def delete_files(files, pth, allow_failure=False):
 
 
 def run_command(argv, pth):
-    # run the model with Popen
-    proc = subprocess.Popen(argv,
-                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                            cwd=pth)
-    while True:
-        line = proc.stdout.readline()
-        c = line.decode('utf-8')
-        if c != '':
-            c = c.rstrip('\r\n')
-            print('{}'.format(c))
-        else:
-            break
+    try:
+        # run the model with Popen
+        proc = subprocess.Popen(argv,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT,
+                                cwd=pth)
+        while True:
+            line = proc.stdout.readline()
+            c = line.decode('utf-8')
+            if c != '':
+                c = c.rstrip('\r\n')
+                print('{}'.format(c))
+            else:
+                break
+        ierr = 0
+        if proc.returncode is not None:
+            ierr = proc.returncode
+        return ierr
+    except:
+        sys.stdout.write('could not run:')
+        for arg in argv:
+            sys.stdout.write(' {}'.format(arg))
+        sys.stdout.write('\n')
+        return 100
 
-    return proc.returncode
 
 
 def main():
