@@ -28,6 +28,8 @@ addons:
       - graphviz
       - python-pip
       - texlive-base
+      - dpkg
+      - tex-common
       - texlive-latex-base
       - texlive-latex-extra
       - texlive-latex-recommended
