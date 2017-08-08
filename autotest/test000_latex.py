@@ -19,19 +19,19 @@ def test_build_mfio():
 
     # build pdf
     argv = ['pdflatex', 'mf6io.nightlybuild.tex']
-    ierr = run_command(argv, pth)
+    ierr = simple_run(argv, pth) # run_command(argv, pth)
     assert ierr == 0, 'Error on first call to pdflatex ({})'.format(ierr)
 
     argv = ['bibtex', 'mf6io.nightlybuild.aux']
-    ierr = run_command(argv, pth)
+    ierr = simple_run(argv, pth) # run_command(argv, pth)
     assert ierr == 0, 'Error on bibtex call ({})'.format(ierr)
 
     argv = ['pdflatex', 'mf6io.nightlybuild.tex']
-    ierr = run_command(argv, pth)
+    ierr = simple_run(argv, pth) # run_command(argv, pth)
     assert ierr == 0, 'Error on second call to pdflatex ({})'.format(ierr)
 
     argv = ['pdflatex', 'mf6io.nightlybuild.tex']
-    ierr = run_command(argv, pth)
+    ierr = simple_run(argv, pth) # run_command(argv, pth)
     assert ierr == 0, 'Error on third call to pdflatex ({})'.format(ierr)
 
     msg = 'mf6io.nightlybuild.pdf does not exist'
@@ -82,6 +82,21 @@ def run_command(argv, pth):
         sys.stdout.write('\n')
         return 100
 
+
+def simple_run(argv, pth):
+    opth = os.getcwd()
+    os.chdir(pth)
+    cmd = ''
+    for arg in argv:
+        cmd += '{} '.format(arg)
+    ierr = 0
+    try:
+        os.system(cmd)
+    except:
+        ierr = 1
+    assert ierr == 0, 'could not build main.pdf'
+    os.chdir(opth)
+    return ierr
 
 
 def main():
