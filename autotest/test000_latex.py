@@ -3,6 +3,16 @@ import sys
 import subprocess
 
 
+def test_clean_latex():
+    pth = os.path.join('..', 'doc', 'mf6io')
+
+    # remove existing files
+    files = ['mf6io.nightlybuild.pdf', 'mf6io.nightlybuild.aux',
+             'mf6io.nightlybuild.bbl']
+    delete_files(files, pth, allow_failure=True)
+    return
+
+
 def test_build_mfio():
     opth = os.getcwd()
 
@@ -12,35 +22,38 @@ def test_build_mfio():
 
     pth = './'
 
-    # remove existing files
-    files = ['mf6io.nightlybuild.pdf', 'mf6io.nightlybuild.aux',
-             'mf6io.nightlybuild.bbl']
-    delete_files(files, pth, allow_failure=True)
-
     # build pdf
     argv = ['pdflatex', 'mf6io.nightlybuild.tex']
-    ierr = simple_run(argv, pth) # run_command(argv, pth)
-    assert ierr == 0, 'Error on first call to pdflatex ({})'.format(ierr)
+    buff, ierr = run_command_wrapper(argv, pth)
+    msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0], argv[1])
+    assert ierr == 0, buff + msg
 
     argv = ['bibtex', 'mf6io.nightlybuild.aux']
-    ierr = simple_run(argv, pth) # run_command(argv, pth)
-    assert ierr == 0, 'Error on bibtex call ({})'.format(ierr)
+    buff, ierr = run_command_wrapper(argv, pth)
+    msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0], argv[1])
+    assert ierr == 0, buff + msg
 
     argv = ['pdflatex', 'mf6io.nightlybuild.tex']
-    ierr = simple_run(argv, pth) # run_command(argv, pth)
-    assert ierr == 0, 'Error on second call to pdflatex ({})'.format(ierr)
+    buff, ierr = run_command_wrapper(argv, pth)
+    msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0], argv[1])
+    assert ierr == 0, buff + msg
 
     argv = ['pdflatex', 'mf6io.nightlybuild.tex']
-    ierr = simple_run(argv, pth) # run_command(argv, pth)
-    assert ierr == 0, 'Error on third call to pdflatex ({})'.format(ierr)
-
-    msg = 'mf6io.nightlybuild.pdf does not exist'
-    assert os.path.isfile(os.path.join(pth, 'mf6io.nightlybuild.pdf')), msg
+    buff, ierr = run_command_wrapper(argv, pth)
+    msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0], argv[1])
+    assert ierr == 0, buff + msg
 
     # change back to starting directory
     os.chdir(opth)
 
     return
+
+
+def test_pdf():
+    pth = os.path.join('..', 'doc', 'mf6io')
+
+    msg = 'mf6io.nightlybuild.pdf does not exist'
+    assert os.path.isfile(os.path.join(pth, 'mf6io.nightlybuild.pdf')), msg
 
 
 def delete_files(files, pth, allow_failure=False):
@@ -56,31 +69,33 @@ def delete_files(files, pth, allow_failure=False):
     return True
 
 
-def run_command(argv, pth):
-    try:
-        # run the model with Popen
-        proc = subprocess.Popen(argv,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT,
-                                cwd=pth)
-        while True:
-            line = proc.stdout.readline()
-            c = line.decode('utf-8')
-            if c != '':
-                c = c.rstrip('\r\n')
-                print('{}'.format(c))
-            else:
-                break
-        ierr = 0
-        if proc.returncode is not None:
-            ierr = proc.returncode
-        return ierr
-    except:
-        sys.stdout.write('could not run:')
-        for arg in argv:
-            sys.stdout.write(' {}'.format(arg))
-        sys.stdout.write('\n')
-        return 100
+def run_command_wrapper(argv, pth, timeout=10):
+    buff, ierr = run_command(argv, pth, timeout=timeout)
+
+    return buff, ierr
+
+
+def run_command(argv, pth, timeout=60):
+    buff = ''
+    ierr = 0
+    with subprocess.Popen(argv,
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT,
+                          cwd=pth) as process:
+        try:
+            output, unused_err = process.communicate(timeout=timeout)
+            buff += output
+        except subprocess.TimeoutExpired:
+            process.kill()
+            output, unused_err = process.communicate()
+            buff = output.decode('utf-8')
+            ierr = 100
+        except:
+            output, unused_err = process.communicate()
+            buff = output.decode('utf-8')
+            ierr = 101
+
+    return buff, ierr
 
 
 def simple_run(argv, pth):
