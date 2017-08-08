@@ -28,14 +28,15 @@ addons:
       - graphviz
       - python-pip
       - texlive-base
-      - dpkg
-      - tex-common
       - texlive-latex-base
       - texlive-latex-extra
       - texlive-latex-recommended
       - texlive-science
       - texlive-fonts-recommended
       - texlive-fonts-extra
+      - dpkg
+      - tex-common
+      - latex-xcolor
 
 # command to install dependencies
 install:
