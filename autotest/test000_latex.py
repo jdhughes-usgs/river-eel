@@ -14,6 +14,9 @@ def cwd(path):
 
 
 def test_clean_latex():
+    """
+    Clean mf6io.nightlybuild files
+    """
     pth = os.path.join('..', 'doc', 'mf6io')
 
     # remove existing files
@@ -23,7 +26,57 @@ def test_clean_latex():
     return
 
 
+def test_rebuild_from_dfn():
+    """
+    Rebuild mf6io.nightlybuild TeX files from dfn files
+    """
+    npth = os.path.join('..', 'doc', 'mf6io', 'mf6ivar')
+    pth = './'
+
+
+    with cwd(npth):
+
+        # get list of TeX files
+        files = [f for f in os.listdir('tex') if
+                 os.path.isfile(os.path.join('tex', f))]
+        for f in files:
+            fpth = os.path.join('tex', f)
+            os.remove(fpth)
+
+        # run python
+        argv = ['python', 'mf6ivar.py']
+        buff, ierr = run_command(argv, pth)
+        msg = '\nERROR {}: could not run {} with {}'.format(ierr, argv[0],
+                                                            argv[1])
+        assert ierr == 0, buff + msg
+
+        # get list for dfn files
+        dfnfiles = [os.path.splitext(f)[0] for f in os.listdir('dfn') if
+                    os.path.isfile(os.path.join('dfn', f)) and
+                    'dfn' in os.path.splitext(f)[1]]
+        texfiles = [os.path.splitext(f)[0] for f in os.listdir('tex') if
+                    os.path.isfile(os.path.join('tex', f)) and
+                    'tex' in os.path.splitext(f)[1]]
+        missing = ''
+        icnt = 0
+        for f in dfnfiles:
+            if 'common' in f:
+                continue
+            fpth = '{}-desc'.format(f)
+            if fpth not in texfiles:
+                icnt += 1
+                missing += '  {:3d} {}.tex\n'.format(icnt, fpth)
+        msg = '\n{} TeX file(s) are missing. '.format(icnt) + \
+              'Missing files:\n{}'.format(missing)
+        assert icnt == 0, msg
+
+    return
+
+
 def test_build_mfio():
+    """
+    Build mf6io.nightlybuild.pdf from LaTeX files
+    """
     # set path to document files
     npth = os.path.join('..', 'doc', 'mf6io')
 
@@ -32,25 +85,25 @@ def test_build_mfio():
     with cwd(npth):
         # build pdf
         argv = ['pdflatex', 'mf6io.nightlybuild.tex']
-        buff, ierr = run_command_wrapper(argv, pth)
+        buff, ierr = run_command(argv, pth)
         msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0],
                                                           argv[1])
         assert ierr == 0, buff + msg
 
         argv = ['bibtex', 'mf6io.nightlybuild.aux']
-        buff, ierr = run_command_wrapper(argv, pth)
+        buff, ierr = run_command(argv, pth)
         msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0],
                                                           argv[1])
         assert ierr == 0, buff + msg
 
         argv = ['pdflatex', 'mf6io.nightlybuild.tex']
-        buff, ierr = run_command_wrapper(argv, pth)
+        buff, ierr = run_command(argv, pth)
         msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0],
                                                           argv[1])
         assert ierr == 0, buff + msg
 
         argv = ['pdflatex', 'mf6io.nightlybuild.tex']
-        buff, ierr = run_command_wrapper(argv, pth)
+        buff, ierr = run_command(argv, pth)
         msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0],
                                                           argv[1])
         assert ierr == 0, buff + msg
@@ -59,6 +112,9 @@ def test_build_mfio():
 
 
 def test_pdf():
+    """
+    Test if mf6io.nightlybuild.pdf exists
+    """
     pth = os.path.join('..', 'doc', 'mf6io')
 
     msg = 'mf6io.nightlybuild.pdf does not exist'
@@ -76,12 +132,6 @@ def delete_files(files, pth, allow_failure=False):
             if not allow_failure:
                 return False
     return True
-
-
-def run_command_wrapper(argv, pth, timeout=10):
-    buff, ierr = run_command(argv, pth, timeout=timeout)
-
-    return buff, ierr
 
 
 def run_command(argv, pth, timeout=10):
@@ -113,6 +163,8 @@ def main():
     msg = 'Running {} test'.format(tnam)
     print(msg)
 
+    print('running...test_rebuild_from_dfn()')
+    test_rebuild_from_dfn()
     print('running...test_clean_latex()')
     test_clean_latex()
     print('running...test_build_mfio()')
