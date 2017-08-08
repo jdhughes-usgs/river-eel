@@ -32,7 +32,6 @@ addons:
       - texlive-latex-extra
       - texlive-latex-recommended
       - texlive-science
-      - texlive-tools
       - texlive-fonts-recommended
       - texlive-fonts-extra
 
