@@ -1,6 +1,16 @@
 import os
-import sys
 import subprocess
+from contextlib import contextmanager
+
+
+@contextmanager
+def cwd(path):
+    oldpwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(oldpwd)
 
 
 def test_clean_latex():
@@ -14,37 +24,36 @@ def test_clean_latex():
 
 
 def test_build_mfio():
-    opth = os.getcwd()
-
     # set path to document files
     npth = os.path.join('..', 'doc', 'mf6io')
-    os.chdir(npth)
 
     pth = './'
 
-    # build pdf
-    argv = ['pdflatex', 'mf6io.nightlybuild.tex']
-    buff, ierr = run_command_wrapper(argv, pth)
-    msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0], argv[1])
-    assert ierr == 0, buff + msg
+    with cwd(npth):
+        # build pdf
+        argv = ['pdflatex', 'mf6io.nightlybuild.tex']
+        buff, ierr = run_command_wrapper(argv, pth)
+        msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0],
+                                                          argv[1])
+        assert ierr == 0, buff + msg
 
-    argv = ['bibtex', 'mf6io.nightlybuild.aux']
-    buff, ierr = run_command_wrapper(argv, pth)
-    msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0], argv[1])
-    assert ierr == 0, buff + msg
+        argv = ['bibtex', 'mf6io.nightlybuild.aux']
+        buff, ierr = run_command_wrapper(argv, pth)
+        msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0],
+                                                          argv[1])
+        assert ierr == 0, buff + msg
 
-    argv = ['pdflatex', 'mf6io.nightlybuild.tex']
-    buff, ierr = run_command_wrapper(argv, pth)
-    msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0], argv[1])
-    assert ierr == 0, buff + msg
+        argv = ['pdflatex', 'mf6io.nightlybuild.tex']
+        buff, ierr = run_command_wrapper(argv, pth)
+        msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0],
+                                                          argv[1])
+        assert ierr == 0, buff + msg
 
-    argv = ['pdflatex', 'mf6io.nightlybuild.tex']
-    buff, ierr = run_command_wrapper(argv, pth)
-    msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0], argv[1])
-    assert ierr == 0, buff + msg
-
-    # change back to starting directory
-    os.chdir(opth)
+        argv = ['pdflatex', 'mf6io.nightlybuild.tex']
+        buff, ierr = run_command_wrapper(argv, pth)
+        msg = '\nERROR {}: could not run {} on {}'.format(ierr, argv[0],
+                                                          argv[1])
+        assert ierr == 0, buff + msg
 
     return
 
@@ -75,7 +84,7 @@ def run_command_wrapper(argv, pth, timeout=10):
     return buff, ierr
 
 
-def run_command(argv, pth, timeout=60):
+def run_command(argv, pth, timeout=10):
     buff = ''
     ierr = 0
     with subprocess.Popen(argv,
@@ -84,7 +93,7 @@ def run_command(argv, pth, timeout=60):
                           cwd=pth) as process:
         try:
             output, unused_err = process.communicate(timeout=timeout)
-            buff += output
+            buff = output.decode('utf-8')
         except subprocess.TimeoutExpired:
             process.kill()
             output, unused_err = process.communicate()
@@ -98,29 +107,18 @@ def run_command(argv, pth, timeout=60):
     return buff, ierr
 
 
-def simple_run(argv, pth):
-    opth = os.getcwd()
-    os.chdir(pth)
-    cmd = ''
-    for arg in argv:
-        cmd += '{} '.format(arg)
-    ierr = 0
-    try:
-        os.system(cmd)
-    except:
-        ierr = 1
-    assert ierr == 0, 'could not build main.pdf'
-    os.chdir(opth)
-    return ierr
-
-
 def main():
     # write message
     tnam = os.path.splitext(os.path.basename(__file__))[0]
     msg = 'Running {} test'.format(tnam)
     print(msg)
 
+    print('running...test_clean_latex()')
+    test_clean_latex()
+    print('running...test_build_mfio()')
     test_build_mfio()
+    print('running...test_pdf()')
+    test_pdf()
 
     return
 
