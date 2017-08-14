@@ -7,7 +7,9 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['gfortran-5']
-      env: COMPILER=gfortran-5
+      env: 
+        - CVER="gfortran5"
+        - COMPILER=gfortran-5
 
     - os: linux
       compiler: gcc
@@ -23,6 +25,8 @@ install:
         mkdir "$HOME/.local/bin"
       fi
     - export PATH="$HOME/.local/bin:$PATH"
+    - $COMPILER
+    - $CVER
     - eval "${COMPILER}" --version
     - ln -fs $COMPILER "$HOME/.local/bin/gfortran" && gfortran --version
 
