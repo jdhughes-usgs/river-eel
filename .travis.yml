@@ -132,6 +132,7 @@ matrix:
 
   allow_failures:
     - os: osx
+    - env: CVER="gfortran7"
 
 
 install:
