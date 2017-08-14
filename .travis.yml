@@ -5,8 +5,11 @@ matrix:
       compiler: gcc
       addons:
         apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['gfortran-5','python-pip']
+          sources: 
+            - ubuntu-toolchain-r-test
+          packages: 
+            - gfortran-6
+            - python-pip
       env: 
         - PYTHON_VERSION=3.6
         - CVER="gfortran5"
@@ -16,8 +19,11 @@ matrix:
       compiler: gcc
       addons:
         apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['gfortran-6','python-pip']
+          sources: 
+            - ubuntu-toolchain-r-test
+          packages: 
+            - gfortran-6
+            - python-pip
       env: 
         - PYTHON_VERSION=3.6
         - CVER="gfortran6"
