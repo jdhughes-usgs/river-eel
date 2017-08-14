@@ -23,7 +23,8 @@ install:
         mkdir "$HOME/.local/bin"
       fi
     - export PATH="$HOME/.local/bin:$PATH"
-    - ln -fs $COMPILER "$HOME/.local/bin/gfortran" && gfortran --version
+    - eval "${COMPILER}"
+    - ln -fs "${COMPILER}" "$HOME/.local/bin/gfortran" && gfortran --version
 
 
 script:
