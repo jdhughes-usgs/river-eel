@@ -3,7 +3,6 @@ matrix:
   include:
     - os: linux
       compiler: gcc
-#      python: 3.5
       cache:
         apt: true
         pip: true
@@ -16,10 +15,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-5
-            - python-pip
-            - python-nose
-#            - python3-pip
-#            - python3-nose
 #            - texlive-base
 #            - texlive-latex-base
 #            - texlive-latex-extra
@@ -36,7 +31,6 @@ matrix:
 
     - os: linux
       compiler: gcc
-#      python: 3.5
       cache:
         apt: true
         pip: true
@@ -49,10 +43,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-6
-            - python-pip
-            - python-nose
-#            - python3-pip
-#            - python3-nose
 #            - texlive-base
 #            - texlive-latex-base
 #            - texlive-latex-extra
@@ -97,19 +87,18 @@ install:
         gfortran --version;
         ls -l /usr/bin/gfortran-6;
       fi
-#     python nightmare
-#    - which python3
-#    - python3 --version
-#    - which pip3
-#    - pip3 --version
-#    - which nosetests3
-#    - nosetests3 --version
-#    - ln -fs /opt/python/3.5.3/bin/python3 "$HOME/.local/bin/python"
-#    - ln -fs /opt/python/3.5.3/bin/nosetests3 "$HOME/.local/bin/nosetests"
-#    - which python
-#    - python --version
-#    - which nosetests
-#    - nosetests --version
+    # install anaconda
+    - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      fi
+    - bash miniconda.sh -b -p $HOME/miniconda
+    - export PATH="$HOME/miniconda/bin:$PATH"
+    - hash -r
+    - conda config --set always_yes yes --set changeps1 no
+    - conda update -q conda
+    # Useful for debugging any issues with conda
+    - conda info -a
+    - python --version
     - pip install -r requirements.travis.txt
     - pip install https://github.com/modflowpy/flopy/zipball/develop
     - pip install https://github.com/modflowpy/pymake/zipball/master
