@@ -3,15 +3,17 @@ matrix:
   include:
     - os: linux
       compiler: gcc
+      python: 3.5
       addons:
         apt:
           sources: 
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-5
-            - python3
-            - python3-pip
-            - python3-nose
+#            - python3
+#            - python3-pip
+#            - python3-nose
+            - python-pip
             - texlive-base
             - texlive-latex-base
             - texlive-latex-extra
@@ -28,15 +30,17 @@ matrix:
 
     - os: linux
       compiler: gcc
+      python: 3.5
       addons:
         apt:
           sources: 
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-6
-            - python3
-            - python3-pip
-            - python3-nose
+#            - python3
+#            - python3-pip
+#            - python3-nose
+            - python-pip
             - texlive-base
             - texlive-latex-base
             - texlive-latex-extra
@@ -81,11 +85,13 @@ install:
         gfortran --version;
         ls -l /usr/bin/gfortran-6;
       fi
+    - which python
+    - python --version
     - which python3
     - python3 --version
-    - ln -fs /opt/python/3.5.3/bin/python3 "$HOME/.local/bin/python"
-    - which python3
-    - python3 --version
+#    - ln -fs /opt/python/3.5.3/bin/python3 "$HOME/.local/bin/python"
+    - which python
+    - python --version
     - pip install -r requirements.travis.txt
     - pip install https://github.com/modflowpy/flopy/zipball/develop
     - pip install https://github.com/modflowpy/pymake/zipball/master
