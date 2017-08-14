@@ -6,8 +6,9 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['gfortran-5','python3.6','python-pip']
+          packages: ['gfortran-5','python-pip']
       env: 
+        - PYTHON_VERSION=3.6
         - CVER="gfortran5"
         - COMPILER=gfortran-5
 
@@ -16,8 +17,9 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['gfortran-6','python3.6','python-pip']
+          packages: ['gfortran-6','python-pip']
       env: 
+        - PYTHON_VERSION=3.6
         - CVER="gfortran6"
         - COMPILER=gfortran-6
 
