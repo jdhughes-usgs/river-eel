@@ -10,6 +10,7 @@ matrix:
           packages: 
             - gfortran-5
             - python-pip
+            - python-nose
             - texlive-base
             - texlive-latex-base
             - texlive-latex-extra
@@ -34,6 +35,7 @@ matrix:
           packages: 
             - gfortran-6
             - python-pip
+            - python-nose
             - texlive-base
             - texlive-latex-base
             - texlive-latex-extra

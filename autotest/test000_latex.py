@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 from contextlib import contextmanager
 
@@ -17,6 +18,10 @@ def test_clean_latex():
     """
     Clean mf6io.nightlybuild files
     """
+    # do not build latex on osx
+    if sys.platform == 'darwin':
+        return
+        
     pth = os.path.join('..', 'doc', 'mf6io')
 
     # remove existing files
@@ -30,6 +35,10 @@ def test_rebuild_from_dfn():
     """
     Rebuild mf6io.nightlybuild TeX files from dfn files
     """
+    # do not build latex on osx
+    if sys.platform == 'darwin':
+        return
+        
     npth = os.path.join('..', 'doc', 'mf6io', 'mf6ivar')
     pth = './'
 
@@ -77,6 +86,10 @@ def test_build_mfio():
     """
     Build mf6io.nightlybuild.pdf from LaTeX files
     """
+    # do not build latex on osx
+    if sys.platform == 'darwin':
+        return
+        
     # set path to document files
     npth = os.path.join('..', 'doc', 'mf6io')
 
@@ -115,6 +128,10 @@ def test_pdf():
     """
     Test if mf6io.nightlybuild.pdf exists
     """
+    # do not build latex on osx
+    if sys.platform == 'darwin':
+        return
+        
     pth = os.path.join('..', 'doc', 'mf6io')
 
     msg = 'mf6io.nightlybuild.pdf does not exist'
