@@ -1,5 +1,4 @@
 language: fortran
-python: "3.6"
 matrix:
   include:
     - os: linux
@@ -10,8 +9,8 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-5
+            - python3.5-complete
             - python-pip
-            - python-nose
             - texlive-base
             - texlive-latex-base
             - texlive-latex-extra
@@ -34,8 +33,8 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-6
+            - python3.5-complete
             - python-pip
-            - python-nose
             - texlive-base
             - texlive-latex-base
             - texlive-latex-extra
@@ -80,13 +79,14 @@ install:
         gfortran --version;
         ls -l /usr/bin/gfortran-6;
       fi
+    - echo "$PYTHONPATH"
+    - export PYTHONPATH=$PYTHONPATH:.
     - pip install -r requirements.travis.txt
     - pip install https://github.com/modflowpy/flopy/zipball/develop
     - pip install https://github.com/modflowpy/pymake/zipball/master
 
 
 script:
-    - export PYTHONPATH=$PYTHONPATH:.
     - python --version
     - which python
     - cd autotest
