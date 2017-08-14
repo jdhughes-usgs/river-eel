@@ -9,6 +9,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-5
+            - python3.6
             - python-pip
             - python-nose
             - texlive-base
@@ -22,7 +23,6 @@ matrix:
             - tex-common
             - latex-xcolor
       env: 
-        - PYTHON_VERSION=3.6
         - CVER="gfortran5"
         - COMPILER=gfortran-5
 
@@ -34,6 +34,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-6
+            - python3.6
             - python-pip
             - python-nose
             - texlive-base
@@ -47,7 +48,6 @@ matrix:
             - tex-common
             - latex-xcolor
       env: 
-        - PYTHON_VERSION=3.6
         - CVER="gfortran6"
         - COMPILER=gfortran-6
 
