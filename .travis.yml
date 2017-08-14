@@ -98,6 +98,7 @@ install:
     - conda update -q conda
     # Useful for debugging any issues with conda
     - conda info -a
+    - conda install nose
     - python --version
     - pip install -r requirements.travis.txt
     - pip install https://github.com/modflowpy/flopy/zipball/develop
