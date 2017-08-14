@@ -1,56 +1,49 @@
-language: python
-sudo: require
-dist: trusty
-
-compiler:
-  - gcc
-
+language: cpp
 matrix:
   include:
-    - python: 3.6
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-4.8']
+      env: COMPILER=g++-4.8
 
-cache:
-  apt: true
-  pip: true
-  directories:
-    - $HOME/.cache/pip
-    - $HOME/.local
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-4.9']
+      env: COMPILER=g++-4.9
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gfortran-5
-      - binutils
-      - python-pip
-      - texlive-base
-      - texlive-latex-base
-      - texlive-latex-extra
-      - texlive-latex-recommended
-      - texlive-science
-      - texlive-fonts-recommended
-      - texlive-fonts-extra
-      - dpkg
-      - tex-common
-      - latex-xcolor
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-5']
+      env: COMPILER=g++-5
 
-# command to install dependencies
-install:
-    - |
-      if [[ ! -d "$HOME/.local/bin" ]]; then
-        mkdir "$HOME/.local/bin"
-      fi
-    - export PATH="$HOME/.local/bin:$PATH"
-    - export FC=/usr/bin/gfortran-5
-    - ln -fs /usr/bin/gfortran-5 "$HOME/.local/bin/gfortran" && gfortran --version
-    - ls -l /usr/bin/gfortran-5
-    - pip install -r requirements.travis.txt
-    - pip install https://github.com/modflowpy/flopy/zipball/develop
-    - pip install https://github.com/modflowpy/pymake/zipball/master
+    - os: linux
+      compiler: clang
+      env: COMPILER=clang++
 
-# command to run tests
-script: 
-    - export PYTHONPATH=$PYTHONPATH:.
-    - cd autotest
-    - nosetests -v
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.5']
+          packages: ['clang-3.5']
+      env: COMPILER=clang++-3.5
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.6']
+          packages: ['clang-3.6']
+      env: COMPILER=clang++-3.6
+
+script:
+  make CXX=$COMPILER -j3
