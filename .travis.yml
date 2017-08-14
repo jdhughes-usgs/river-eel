@@ -4,40 +4,6 @@ dist: trusty
 
 matrix:
   include:
-  - os: linux
-    compiler: gcc
-    include:
-      - python: 3.6
-    cache:
-      apt: true
-      pip: true
-      directories:
-        - $HOME/.cache/pip
-        - $HOME/.local
-    addons:
-      apt:
-        sources:
-          - kalakris-cmake
-          - ubuntu-toolchain-r-test
-        packages:
-          - gfortran-5
-          - binutils
-          - cmake
-          - graphviz
-          - python-pip
-          - texlive-base
-          - texlive-latex-base
-          - texlive-latex-extra
-          - texlive-latex-recommended
-          - texlive-science
-          - texlive-fonts-recommended
-          - texlive-fonts-extra
-          - dpkg
-          - tex-common
-          - latex-xcolor
-      env:
-        - gfortran=gfortran-5
-
     - os: linux
       compiler: gcc
       include:
@@ -54,7 +20,7 @@ matrix:
             - kalakris-cmake
             - ubuntu-toolchain-r-test
           packages:
-            - gfortran-6
+            - gfortran-5
             - binutils
             - cmake
             - graphviz
@@ -69,8 +35,42 @@ matrix:
             - dpkg
             - tex-common
             - latex-xcolor
-      env:
-        - gfortran=gfortran-6
+        env:
+          - gfortran=gfortran-5
+
+      - os: linux
+        compiler: gcc
+        include:
+          - python: 3.6
+        cache:
+          apt: true
+          pip: true
+          directories:
+            - $HOME/.cache/pip
+            - $HOME/.local
+        addons:
+          apt:
+            sources:
+              - kalakris-cmake
+              - ubuntu-toolchain-r-test
+            packages:
+              - gfortran-6
+              - binutils
+              - cmake
+              - graphviz
+              - python-pip
+              - texlive-base
+              - texlive-latex-base
+              - texlive-latex-extra
+              - texlive-latex-recommended
+              - texlive-science
+              - texlive-fonts-recommended
+              - texlive-fonts-extra
+              - dpkg
+              - tex-common
+              - latex-xcolor
+        env:
+          - gfortran=gfortran-6
 
 install:
     - |
