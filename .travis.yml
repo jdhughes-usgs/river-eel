@@ -59,21 +59,50 @@ matrix:
       env: 
         - CVER="gfortran6"
 
-    - os: osx
+    - os: linux
       dist: trusty
       sudo: required
-      osx_image: xcode7.3
       compiler: gcc
+      cache:
+        apt: true
+        pip: true
+        directories:
+          - $HOME/.cache/pip
+          - $HOME/.local
+      addons:
+        apt:
+          sources: 
+            - ubuntu-toolchain-r-test
+          packages: 
+            - gfortran-4.9
+            - texlive-base
+            - texlive-latex-base
+            - texlive-latex-extra
+            - texlive-latex-recommended
+            - texlive-science
+            - texlive-fonts-recommended
+            - texlive-fonts-extra
+            - dpkg
+            - tex-common
+            - latex-xcolor
       env: 
-        - CVER="gfortran5"
-#        - COMPILER=gfortran-5
-#        - CXX_COMPILER='g++-5'
-#        - C_COMPILER='gcc-5'
-#        - Fortran_COMPILER='gfortran'
-#        - BUILD_TYPE='Release'
+        - CVER="gfortran4"
 
-  allow_failures:
-    - os: osx
+#    - os: osx
+#      dist: trusty
+#      sudo: required
+#      osx_image: xcode7.3
+#      compiler: gcc
+#      env: 
+#        - CVER="gfortran5"
+##        - COMPILER=gfortran-5
+##        - CXX_COMPILER='g++-5'
+##        - C_COMPILER='gcc-5'
+##        - Fortran_COMPILER='gfortran'
+##        - BUILD_TYPE='Release'
+#
+#  allow_failures:
+#    - os: osx
 
 
 install:
@@ -84,6 +113,11 @@ install:
         mkdir "$HOME/.local/bin";
       fi
     - export PATH="$HOME/.local/bin:$PATH"
+    - if [[ $CVER == "gfortran4" ]]; then
+        ln -fs /usr/bin/gfortran-4.9 "$HOME/.local/bin/gfortran";
+        gfortran --version;
+        ls -l /usr/bin/gfortran-4.9;
+      fi
     - if [[ $CVER == "gfortran5" ]]; then
         ln -fs /usr/bin/gfortran-5 "$HOME/.local/bin/gfortran";
         gfortran --version;
