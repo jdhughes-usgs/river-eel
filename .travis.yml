@@ -18,6 +18,10 @@ matrix:
       env: gfortran=gfortran-6
 
 install:
+    - |
+      if [[ ! -d "$HOME/.local/bin" ]]; then
+        mkdir "$HOME/.local/bin"
+      fi
     - export PATH="$HOME/.local/bin:$PATH"
     - |
       if [[ -d "/usr/bin/gfortran-5" ]]; then
