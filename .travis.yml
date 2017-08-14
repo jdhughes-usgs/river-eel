@@ -9,7 +9,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-5
-            - python3.6
+            - python3
             - python-pip
             - python-nose
             - texlive-base
@@ -34,7 +34,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-6
-            - python3.6
+            - python3
             - python-pip
             - python-nose
             - texlive-base
@@ -51,9 +51,23 @@ matrix:
         - CVER="gfortran6"
         - COMPILER=gfortran-6
 
+    - os: osx
+      osx_image: xcode8
+      compiler: gcc
+      env: 
+        - CVER="gfortran5"
+        - COMPILER=gfortran-5
+        - CXX_COMPILER='g++-5'
+        - C_COMPILER='gcc-5'
+        - Fortran_COMPILER='gfortran'
+        - BUILD_TYPE='Release'
+
+
 install:
-    - |
-      if [[ ! -d "$HOME/.local/bin" ]]; then
+    - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+        brew install python gcc
+      fi
+    - if [[ ! -d "$HOME/.local/bin" ]]; then
         mkdir "$HOME/.local/bin"
       fi
     - export PATH="$HOME/.local/bin:$PATH"
