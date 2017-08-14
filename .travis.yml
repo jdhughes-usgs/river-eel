@@ -24,7 +24,7 @@ install:
       fi
     - export PATH="$HOME/.local/bin:$PATH"
     - eval "${COMPILER}" --version
-    - ln -fs "${COMPILER}" "$HOME/.local/bin/gfortran" && gfortran --version
+    - ln -fs $COMPILER "$HOME/.local/bin/gfortran" && gfortran --version
 
 
 script:
