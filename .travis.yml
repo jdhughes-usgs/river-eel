@@ -55,11 +55,11 @@ matrix:
       env: 
         - CVER="gfortran6"
 
-#    - os: osx
-#      osx_image: xcode8.3
-#      compiler: gcc
-#      env: 
-#        - CVER="gfortran5"
+    - os: osx
+      osx_image: xcode8.3
+      compiler: gcc
+      env: 
+        - CVER="gfortran5"
 #        - COMPILER=gfortran-5
 #        - CXX_COMPILER='g++-5'
 #        - C_COMPILER='gcc-5'
@@ -68,9 +68,9 @@ matrix:
 
 
 install:
-#    - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-#        brew install python gcc;
-#      fi
+    - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+        brew install python gcc;
+      fi
     - if [[ ! -d "$HOME/.local/bin" ]]; then
         mkdir "$HOME/.local/bin";
       fi
@@ -88,6 +88,9 @@ install:
     # install anaconda
     - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
         wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      fi
+    - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
       fi
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
