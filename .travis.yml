@@ -52,7 +52,7 @@ matrix:
         - COMPILER=gfortran-6
 
 #    - os: osx
-#      osx_image: xcode8
+#      osx_image: xcode8.3
 #      compiler: gcc
 #      env: 
 #        - CVER="gfortran5"
@@ -87,6 +87,8 @@ install:
 
 
 script:
-    - export PYTHONPATH=$PYTHONPATH:.
+    - python --version
+    - which python
+#    - export PYTHONPATH=$PYTHONPATH:.
     - cd autotest
     - nosetests -v
