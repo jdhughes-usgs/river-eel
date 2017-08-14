@@ -7,7 +7,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['gfortran-5']
-      env: gfortran=gfortran-5
+      env: COMPILER=gfortran-5
 
     - os: linux
       compiler: gcc
@@ -15,7 +15,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['gfortran-6']
-      env: gfortran=gfortran-6
+      env: COMPILER=gfortran-6
 
 install:
     - |
@@ -23,18 +23,7 @@ install:
         mkdir "$HOME/.local/bin"
       fi
     - export PATH="$HOME/.local/bin:$PATH"
-    - |
-      if [[ -d "/usr/bin/gfortran-5" ]]; then
-        export FC=/usr/bin/gfortran-5
-        ln -fs /usr/bin/gfortran-5 "$HOME/.local/bin/gfortran" && gfortran --version
-        ls -l /usr/bin/gfortran-5
-      fi
-    - |
-      if [[ -d "/usr/bin/gfortran-6" ]]; then
-        export FC=/usr/bin/gfortran-6
-        ln -fs /usr/bin/gfortran-6 "$HOME/.local/bin/gfortran" && gfortran --version
-        ls -l /usr/bin/gfortran-6
-      fi
+    - ln -fs $COMPILER "$HOME/.local/bin/gfortran" && gfortran --version
 
 
 script:
