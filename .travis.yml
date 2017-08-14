@@ -17,16 +17,17 @@ matrix:
           packages: 
             - gfortran-5
             - python-pip
-            - texlive-base
-            - texlive-latex-base
-            - texlive-latex-extra
-            - texlive-latex-recommended
-            - texlive-science
-            - texlive-fonts-recommended
-            - texlive-fonts-extra
-            - dpkg
-            - tex-common
-            - latex-xcolor
+            - python-nose
+#            - texlive-base
+#            - texlive-latex-base
+#            - texlive-latex-extra
+#            - texlive-latex-recommended
+#            - texlive-science
+#            - texlive-fonts-recommended
+#            - texlive-fonts-extra
+#            - dpkg
+#            - tex-common
+#            - latex-xcolor
       env: 
         - CVER="gfortran5"
         - COMPILER=gfortran-5
@@ -47,16 +48,17 @@ matrix:
           packages: 
             - gfortran-6
             - python-pip
-            - texlive-base
-            - texlive-latex-base
-            - texlive-latex-extra
-            - texlive-latex-recommended
-            - texlive-science
-            - texlive-fonts-recommended
-            - texlive-fonts-extra
-            - dpkg
-            - tex-common
-            - latex-xcolor
+            - python-nose
+#            - texlive-base
+#            - texlive-latex-base
+#            - texlive-latex-extra
+#            - texlive-latex-recommended
+#            - texlive-science
+#            - texlive-fonts-recommended
+#            - texlive-fonts-extra
+#            - dpkg
+#            - tex-common
+#            - latex-xcolor
       env: 
         - CVER="gfortran6"
         - COMPILER=gfortran-6
@@ -94,7 +96,6 @@ install:
 #     python nightmare
     - which python3
     - python3 --version
-    - which nosetests
     - which nosetests3
     - nosetests3 --version
     - ln -fs /opt/python/3.5.3/bin/python3 "$HOME/.local/bin/python"
