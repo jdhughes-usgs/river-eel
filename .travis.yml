@@ -1,4 +1,5 @@
 language: fortran
+python: "3.6"
 matrix:
   include:
     - os: linux
@@ -9,7 +10,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-5
-            - python3
             - python-pip
             - python-nose
             - texlive-base
@@ -34,7 +34,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-6
-            - python3
             - python-pip
             - python-nose
             - texlive-base
@@ -87,8 +86,8 @@ install:
 
 
 script:
+    - export PYTHONPATH=$PYTHONPATH:.
     - python --version
     - which python
-#    - export PYTHONPATH=$PYTHONPATH:.
     - cd autotest
     - nosetests -v
