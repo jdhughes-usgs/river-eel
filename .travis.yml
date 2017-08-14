@@ -65,7 +65,7 @@ matrix:
 
 install:
     - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-        brew install python gcc
+        brew install python gcc;
       fi
     - if [[ ! -d "$HOME/.local/bin" ]]; then
         mkdir "$HOME/.local/bin"
