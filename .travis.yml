@@ -51,24 +51,24 @@ matrix:
         - CVER="gfortran6"
         - COMPILER=gfortran-6
 
-    - os: osx
-      osx_image: xcode8
-      compiler: gcc
-      env: 
-        - CVER="gfortran5"
-        - COMPILER=gfortran-5
-        - CXX_COMPILER='g++-5'
-        - C_COMPILER='gcc-5'
-        - Fortran_COMPILER='gfortran'
-        - BUILD_TYPE='Release'
+#    - os: osx
+#      osx_image: xcode8
+#      compiler: gcc
+#      env: 
+#        - CVER="gfortran5"
+#        - COMPILER=gfortran-5
+#        - CXX_COMPILER='g++-5'
+#        - C_COMPILER='gcc-5'
+#        - Fortran_COMPILER='gfortran'
+#        - BUILD_TYPE='Release'
 
 
 install:
-    - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-        brew install python gcc;
-      fi
+#    - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+#        brew install python gcc;
+#      fi
     - if [[ ! -d "$HOME/.local/bin" ]]; then
-        mkdir "$HOME/.local/bin"
+        mkdir "$HOME/.local/bin";
       fi
     - export PATH="$HOME/.local/bin:$PATH"
     - if [[ $CVER == "gfortran5" ]]; then
