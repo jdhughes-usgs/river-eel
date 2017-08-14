@@ -15,19 +15,18 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-5
-#            - texlive-base
-#            - texlive-latex-base
-#            - texlive-latex-extra
-#            - texlive-latex-recommended
-#            - texlive-science
-#            - texlive-fonts-recommended
-#            - texlive-fonts-extra
-#            - dpkg
-#            - tex-common
-#            - latex-xcolor
+            - texlive-base
+            - texlive-latex-base
+            - texlive-latex-extra
+            - texlive-latex-recommended
+            - texlive-science
+            - texlive-fonts-recommended
+            - texlive-fonts-extra
+            - dpkg
+            - tex-common
+            - latex-xcolor
       env: 
         - CVER="gfortran5"
-        - COMPILER=gfortran-5
 
     - os: linux
       compiler: gcc
@@ -43,19 +42,18 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-6
-#            - texlive-base
-#            - texlive-latex-base
-#            - texlive-latex-extra
-#            - texlive-latex-recommended
-#            - texlive-science
-#            - texlive-fonts-recommended
-#            - texlive-fonts-extra
-#            - dpkg
-#            - tex-common
-#            - latex-xcolor
+            - texlive-base
+            - texlive-latex-base
+            - texlive-latex-extra
+            - texlive-latex-recommended
+            - texlive-science
+            - texlive-fonts-recommended
+            - texlive-fonts-extra
+            - dpkg
+            - tex-common
+            - latex-xcolor
       env: 
         - CVER="gfortran6"
-        - COMPILER=gfortran-6
 
 #    - os: osx
 #      osx_image: xcode8.3
