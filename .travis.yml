@@ -2,8 +2,8 @@ language: python
 sudo: require
 dist: trusty
 
-
 matrix:
+  include:
   - os: linux
     compiler: gcc
     include:
@@ -35,62 +35,55 @@ matrix:
           - dpkg
           - tex-common
           - latex-xcolor
-    install:
-        - |
-          if [[ ! -d "$HOME/.local/bin" ]]; then
-            mkdir "$HOME/.local/bin"
-          fi
-        - export PATH="$HOME/.local/bin:$PATH"
-        - export FC=/usr/bin/gfortran-5
-        - ln -fs /usr/bin/gfortran-5 "$HOME/.local/bin/gfortran" && gfortran --version
-        - ls -l /usr/bin/gfortran-5
-        - pip install -r requirements.travis.txt
-        - pip install https://github.com/modflowpy/flopy/zipball/develop
-        - pip install https://github.com/modflowpy/pymake/zipball/master
+      env:
+        - gfortran=gfortran-5
 
-  - os: linux
-    compiler: gcc
-    include:
-      - python: 3.6
-    cache:
-      apt: true
-      pip: true
-      directories:
-        - $HOME/.cache/pip
-        - $HOME/.local
-    addons:
-      apt:
-        sources:
-          - kalakris-cmake
-          - ubuntu-toolchain-r-test
-        packages:
-          - gfortran-6
-          - binutils
-          - cmake
-          - graphviz
-          - python-pip
-          - texlive-base
-          - texlive-latex-base
-          - texlive-latex-extra
-          - texlive-latex-recommended
-          - texlive-science
-          - texlive-fonts-recommended
-          - texlive-fonts-extra
-          - dpkg
-          - tex-common
-          - latex-xcolor
-    install:
-        - |
-          if [[ ! -d "$HOME/.local/bin" ]]; then
-            mkdir "$HOME/.local/bin"
-          fi
-        - export PATH="$HOME/.local/bin:$PATH"
-        - export FC=/usr/bin/gfortran-6
-        - ln -fs /usr/bin/gfortran-6 "$HOME/.local/bin/gfortran" && gfortran --version
-        - ls -l /usr/bin/gfortran-6
-        - pip install -r requirements.travis.txt
-        - pip install https://github.com/modflowpy/flopy/zipball/develop
-        - pip install https://github.com/modflowpy/pymake/zipball/master
+    - os: linux
+      compiler: gcc
+      include:
+        - python: 3.6
+      cache:
+        apt: true
+        pip: true
+        directories:
+          - $HOME/.cache/pip
+          - $HOME/.local
+      addons:
+        apt:
+          sources:
+            - kalakris-cmake
+            - ubuntu-toolchain-r-test
+          packages:
+            - gfortran-6
+            - binutils
+            - cmake
+            - graphviz
+            - python-pip
+            - texlive-base
+            - texlive-latex-base
+            - texlive-latex-extra
+            - texlive-latex-recommended
+            - texlive-science
+            - texlive-fonts-recommended
+            - texlive-fonts-extra
+            - dpkg
+            - tex-common
+            - latex-xcolor
+      env:
+        - gfortran=gfortran-6
+
+install:
+    - |
+      if [[ ! -d "$HOME/.local/bin" ]]; then
+        mkdir "$HOME/.local/bin"
+      fi
+    - export PATH="$HOME/.local/bin:$PATH"
+#    - export FC=/usr/bin/gfortran-6
+#    - ln -fs /usr/bin/gfortran-6 "$HOME/.local/bin/gfortran" && gfortran --version
+#    - ls -l /usr/bin/gfortran-6
+    - pip install -r requirements.travis.txt
+    - pip install https://github.com/modflowpy/flopy/zipball/develop
+    - pip install https://github.com/modflowpy/pymake/zipball/master
 
 
 # command to run tests
