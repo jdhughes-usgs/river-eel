@@ -6,7 +6,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['gfortran-5']
+          packages: ['gfortran-5','python3.6','python-pip']
       env: 
         - CVER="gfortran5"
         - COMPILER=gfortran-5
@@ -16,7 +16,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['gfortran-6']
+          packages: ['gfortran-6','python3.6','python-pip']
       env: 
         - CVER="gfortran6"
         - COMPILER=gfortran-6
@@ -37,29 +37,13 @@ install:
         gfortran --version;
         ls -l /usr/bin/gfortran-6;
       fi
-include:
-  - python: 3.6
-cache:
-  apt: true
-  pip: true
-  directories:
-    - $HOME/.cache/pip
-    - $HOME/.local
-addons:
-  apt:
-    packages:
-      - python-pip
-      - texlive-base
-      - texlive-latex-base
-      - texlive-latex-extra
-      - texlive-latex-recommended
-      - texlive-science
-      - texlive-fonts-recommended
-      - texlive-fonts-extra
-      - dpkg
-      - tex-common
-      - latex-xcolor
+    - pip install -r requirements.travis.txt
+    - pip install https://github.com/modflowpy/flopy/zipball/develop
+    - pip install https://github.com/modflowpy/pymake/zipball/master
 
 
 script:
-  gfortran --version
+    - gfortran --version
+    - export PYTHONPATH=$PYTHONPATH:.
+    - cd autotest
+  
