@@ -1,4 +1,26 @@
 language: fortran
+include:
+  - python: 3.6
+cache:
+  apt: true
+  pip: true
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/.local
+addons:
+  apt:
+    packages:
+      - python-pip
+      - texlive-base
+      - texlive-latex-base
+      - texlive-latex-extra
+      - texlive-latex-recommended
+      - texlive-science
+      - texlive-fonts-recommended
+      - texlive-fonts-extra
+      - dpkg
+      - tex-common
+      - latex-xcolor
 matrix:
   include:
     - os: linux
