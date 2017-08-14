@@ -10,6 +10,16 @@ matrix:
           packages: 
             - gfortran-6
             - python-pip
+            - texlive-base
+            - texlive-latex-base
+            - texlive-latex-extra
+            - texlive-latex-recommended
+            - texlive-science
+            - texlive-fonts-recommended
+            - texlive-fonts-extra
+            - dpkg
+            - tex-common
+            - latex-xcolor
       env: 
         - PYTHON_VERSION=3.6
         - CVER="gfortran5"
@@ -24,6 +34,16 @@ matrix:
           packages: 
             - gfortran-6
             - python-pip
+            - texlive-base
+            - texlive-latex-base
+            - texlive-latex-extra
+            - texlive-latex-recommended
+            - texlive-science
+            - texlive-fonts-recommended
+            - texlive-fonts-extra
+            - dpkg
+            - tex-common
+            - latex-xcolor
       env: 
         - PYTHON_VERSION=3.6
         - CVER="gfortran6"
@@ -51,7 +71,6 @@ install:
 
 
 script:
-    - gfortran --version
     - export PYTHONPATH=$PYTHONPATH:.
     - cd autotest
-  
+    - nosetests -v
