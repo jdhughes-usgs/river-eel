@@ -28,6 +28,7 @@ module UzfModule
 
   private
   public :: uzf_create
+  public :: UzfType
   !
   integer(I4B), parameter              :: nbdtxt = 5                             !number of budget items
   character(len=LENFTYPE)              :: ftype = 'UZF'                          !package ftype
@@ -161,8 +162,8 @@ module UzfModule
     ! -- methods specific for uzf
     procedure, private :: uzf_allocate_scalars
     procedure, private :: uzf_solve
-    procedure, private :: read_cell_properties
-    procedure, private :: print_cell_properties
+    procedure, private :: pakdata_rd
+    procedure, private :: pakdata_pr
     procedure, private :: uzcelloutput
     procedure, private :: findcellabove
     procedure, private :: check_cell_area
@@ -243,7 +244,7 @@ contains
     call this%Uzf_allocate_arrays()
     !
     ! -- Allocate UZF objects plus one extra for work array
-    allocate(this%elements(0:this%nodes+1))
+    allocate(this%elements(this%nodes+1))
     do i = 1, this%nodes + 1
       allocate(this%uzfobj)
       this%elements(i)%obj => this%uzfobj
@@ -263,11 +264,11 @@ contains
     call mem_setptr(this%gwfiss, 'ISS', trim(this%name_model))
 !
 !   --Read uzf cell properties and set values
-    call this%read_cell_properties()
+    call this%pakdata_rd()
     !
     ! -- print cell data
     if (this%iprpak /= 0) then
-      call this%print_cell_properties()
+      call this%pakdata_pr()
     end if
     !
     ! allocate space to store moisture content observations
@@ -2469,10 +2470,9 @@ contains
     return
    end subroutine findcellabove
 
-   subroutine read_cell_properties(this)
+   subroutine pakdata_rd(this)
 ! ******************************************************************************
-! read_cell_properties -- Read UZF cell properties and set them for UzfKinematic
-!                         type.
+! pakdata_rd -- Read UZF cell properties and set them for UzfKinematic type.
 ! ******************************************************************************
     use InputOutputModule, only: urword
     use SimModule, only: ustop, store_error, count_errors
@@ -2486,9 +2486,9 @@ contains
     integer(I4B) :: ic
     logical :: isfound, endOfBlock
     real(DP) :: surfdep,vks,thtr,thts,thti,eps,hgwf
-    integer(I4B), dimension(:), pointer, contiguous :: rowmaxnnz => null()
-    type(sparsematrix), pointer :: sparse => null()
-    integer(I4B), dimension(:), pointer :: nboundchk
+    integer(I4B), dimension(:), allocatable :: rowmaxnnz
+    type(sparsematrix) :: sparse
+    integer(I4B), dimension(:), allocatable :: nboundchk
 ! ------------------------------------------------------------------------------
 !
     !
@@ -2519,8 +2519,8 @@ contains
     !
     ! -- parse locations block if detected
     if (isfound) then
-      write(this%iout,'(/1x,a,a)')'PROCESSING '//trim(adjustl(this%text))// &
-        ' PACKAGEDATA'
+      write(this%iout,'(/1x,3a)') 'PROCESSING ', trim(adjustl(this%text)),      &
+                                  ' PACKAGEDATA'
       do
         call this%parser%GetNextLine(endOfBlock)
         if (endOfBlock) exit
@@ -2540,7 +2540,7 @@ contains
         
         ! -- store the reduced gwf nodenumber in mfcellid
         call this%parser%GetCellid(this%dis%ndim, cellid)
-        ic = this%dis%noder_from_cellid(cellid,                               &
+        ic = this%dis%noder_from_cellid(cellid,                                 &
                                         this%parser%iuactive, this%iout)
         this%mfcellid(i) = ic
         rowmaxnnz(ic) = rowmaxnnz(ic) + 1
@@ -2548,80 +2548,80 @@ contains
         ! -- landflag
         landflag = this%parser%GetInteger()
         if (landflag < 0 .OR. landflag > 1) then
-          write(errmsg,'(4x,a,1x,i6)') &
-         '****ERROR. LANDFLAG MUST BE 0 or 1 ', landflag
+          write(errmsg,'(4x,a,1x,i0,1x,a,1x,i0)') &
+            '****ERROR. LANDFLAG FOR UZF CELL', i,                              &
+            'MUST BE 0 or 1 - SPECIFIED VALUE =', landflag
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
         end if
         !
         ! -- ivertcon
         ivertcon = this%parser%GetInteger()
         if (ivertcon < 0 .OR. ivertcon > this%nodes) then
-          write(errmsg,'(4x,a,1x,i6)') &
-            '****ERROR. IVERTCON MUST BE 0 or less than NUZFCELLS', ivertcon
+          write(errmsg,'(4x,a,1x,i0,1x,a,1x,i0)')                                          &
+            '****ERROR. IVERTCON FOR UZF CELL', i,                                         &
+            'MUST BE 0 or less than NUZFCELLS - SPECIFIED VALUE =', ivertcon
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
+          ivertcon = 0
         end if
         !
         ! -- surfdep
         surfdep =  this%parser%GetDouble()
         if (surfdep <= DZERO) then   !need to check for cell thickness
-          write(errmsg,'(4x,a,1x,f10.5)') &
-             '****ERROR. SURFDEP MUST BE > 0 ', surfdep
+          write(errmsg,'(4x,a,1x,i0,1x,a,1x,g0)')                                          &
+            '****ERROR. SURFDEP FOR UZF CELL', i,                                          &
+             'MUST BE > 0 - SPECIFIED VALUE =', surfdep
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
+          surfdep = DZERO
         end if
         !
         ! -- vks
         vks = this%parser%GetDouble()
         if (vks <= DZERO) then
-          write(errmsg,'(4x,a,1x,f10.6)') &
-             '****ERROR. VKS FOR UZF MUST BE > 0 ', vks
+          write(errmsg,'(4x,a,1x,i0,1x,a,1x,g0)')                                          &
+            '****ERROR. VKS FOR UZF CELL', i,                                              &
+             'MUST BE > 0 - SPECIFIED VALUE =', vks
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
+          vks = DONE
         end if
         !
         ! -- thtr
         thtr = this%parser%GetDouble()
         if (thtr <= DZERO) then
-          write(errmsg,'(4x,a,1x,f10.6)') &
-            '****ERROR. THTR FOR UZF MUST BE > 0 ', thtr
+          write(errmsg,'(4x,a,1x,i0,1x,a,1x,g0)')                                          &
+            '****ERROR. THTR FOR UZF CELL', i,                                             &
+             'MUST BE > 0 - SPECIFIED VALUE =', thtr
           call store_error(errmsg)
-          call ustop()
+          thtr = 0.1
         end if
         !
         ! -- thts
         thts = this%parser%GetDouble()
         if (thts <= thtr) then
-          write(errmsg,'(4x,a,1x,f10.6)') &
-            '****ERROR. THTS FOR UZF MUST BE > THTR ', thts
+          write(errmsg,'(4x,a,1x,i0,1x,a,1x,g0)')                                          &
+            '****ERROR. THTS FOR UZF CELL', i,                                             &
+             'MUST BE > THTR - SPECIFIED VALUE =', thts
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
+          thts = 0.2
         end if
         !
         ! -- thti
         thti = this%parser%GetDouble()
         if (thti < thtr .OR. thti > thts) then
-          write(errmsg,'(4x,a,1x,f10.6)') &
-            '****ERROR. THTI FOR UZF MUST BE >= THTR AND < THTS ', thti
+          write(errmsg,'(4x,a,1x,i0,1x,a,1x,g0)')                                          &
+            '****ERROR. THTI FOR UZF CELL', i,                                             &
+             'MUST BE >= THTR AND < THTS - SPECIFIED VALUE =', thti
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
+          thti = 0.1
         end if
         !
         ! -- eps
         eps = this%parser%GetDouble()
         if (eps < 3.5 .OR. eps > 14) then
-          write(errmsg,'(4x,a,1x,f10.6)') &
-            '****ERROR. EPSILON FOR UZF MUST BETWEEN 3.5 AND 14.0 ', eps
+          write(errmsg,'(4x,a,1x,i0,1x,a,1x,g0)')                                          &
+            '****ERROR. EPSILON FOR UZF CELL', i,                                          &
+             'MUST BE BETWEEN 3.5 and 14.0 - SPECIFIED VALUE =', eps
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
+          eps = 3.5
         end if
         !
         ! -- boundname
@@ -2640,22 +2640,11 @@ contains
         end if
        !
       end do
-      !
-      ! --Initialize one more uzf object, which is used as a worker
-      i = this%nodes + 1
-      this%uzfobj => this%elements(i)%obj
-      n = this%mfcellid(i-1)
-      hgwf = this%xnew(n)
-      landflag = 0
-      ivertcon = 0
-      call this%uzfobj%setdata(i,this%gwfarea(n),this%gwftop(n),this%gwfbot(n), &
-                          surfdep,vks,thtr,thts,thti,eps,this%nwav,this%ntrail, &
-                          landflag,ivertcon,hgwf)
     else
       call store_error('ERROR.  REQUIRED PACKAGEDATA BLOCK NOT FOUND.')
     end if
     !
-    ! -- check for duplicate or missing lakes
+    ! -- check for duplicate or missing uzf cells
     do i = 1, this%nodes
       if (nboundchk(i) == 0) then
         write(errmsg,'(a,1x,i0)')                                             &
@@ -2675,11 +2664,19 @@ contains
       call ustop()
     end if
     !
-    ! -- allocate space for connectivity used to identify multiple uzf cells per
-    !    GWF model cell
-    allocate(sparse)
+    ! --Initialize one more uzf object, which is used as a worker
+    i = this%nodes + 1
+    this%uzfobj => this%elements(i)%obj
+    n = this%mfcellid(i-1)
+    hgwf = this%xnew(n)
+    landflag = 0
+    ivertcon = 0
+    call this%uzfobj%setdata(i,this%gwfarea(n),this%gwftop(n),this%gwfbot(n), &
+                        surfdep,vks,thtr,thts,thti,eps,this%nwav,this%ntrail, &
+                        landflag,ivertcon,hgwf)
     !
-    ! -- set up sparse
+    ! -- setup sparse for connectivity used to identify multiple uzf cells per
+    !    GWF model cell
     call sparse%init(this%dis%nodes, this%dis%nodes, rowmaxnnz)
     ! --
     do i = 1, this%nodes
@@ -2707,18 +2704,16 @@ contains
     end if
     !
     ! -- deallocate local variables
-    deallocate(sparse)
     deallocate(rowmaxnnz)
     deallocate(nboundchk)
     !
     ! -- return
     return
-  end subroutine read_cell_properties
+  end subroutine pakdata_rd
 
-  subroutine print_cell_properties(this)
+  subroutine pakdata_pr(this)
 ! ******************************************************************************
-! read_cell_properties -- Read UZF cell properties and set them for UzfKinematic
-!                         type.
+! pakdata_pr -- Read UZF cell properties and set them for UzfKinematic type.
 ! ******************************************************************************
 ! ------------------------------------------------------------------------------
     ! -- dummy
@@ -2806,7 +2801,7 @@ contains
     !
     ! -- return
     return
-  end subroutine print_cell_properties
+  end subroutine pakdata_pr
 
    subroutine check_cell_area(this)
 ! ******************************************************************************
