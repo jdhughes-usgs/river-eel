@@ -53,13 +53,13 @@ matrix:
             - gfortran-6
 
     allow_failures:
-    - env: CVER=gfortran7
-      addons:
-        apt:
-          sources: 
-            - ubuntu-toolchain-r-test
-          packages: 
-            - gfortran-7
+      - env: CVER=gfortran7
+        addons:
+          apt:
+            sources: 
+              - ubuntu-toolchain-r-test
+            packages: 
+              - gfortran-7
      
      
 
