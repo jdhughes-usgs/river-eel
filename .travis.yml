@@ -1,15 +1,4 @@
 language: fortran
-os:
-  - linux
-  - osx
-compiler: 
-  - gcc
-env:
-  - CVER=gfortran4
-  - CVER=gfortran5
-  - CVER=gfortran6
-  - CVER=gfortran7
-  
 matrix:
   include:
     - os: linux
