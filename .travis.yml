@@ -31,18 +31,24 @@ matrix:
     - env: CVER=gfortran4
       addons:
         apt:
+          sources: 
+            - ubuntu-toolchain-r-test
           packages: 
             - gfortran-4.9
 
     - env: CVER=gfortran5
       addons:
         apt:
+          sources: 
+            - ubuntu-toolchain-r-test
           packages: 
             - gfortran-5
 
     - env: CVER=gfortran6
       addons:
         apt:
+          sources: 
+            - ubuntu-toolchain-r-test
           packages: 
             - gfortran-6
 
@@ -50,6 +56,8 @@ matrix:
 #    - env: CVER=gfortran7
 #      addons:
 #        apt:
+#          sources: 
+#            - ubuntu-toolchain-r-test
 #          packages: 
 #            - gfortran-7
      
