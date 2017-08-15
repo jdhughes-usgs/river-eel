@@ -6,7 +6,7 @@ module InputOutputModule
   use SimModule, only: store_error, ustop, store_error_unit, &
                        store_error_filename
   use ConstantsModule, only: LINELENGTH, LENBIGLINE, LENBOUNDNAME, &
-                             NAMEDBOUNDFLAG, LINELENGTH
+                             NAMEDBOUNDFLAG, LINELENGTH, MAXCHARLEN
   private
   public :: dclosetest, GetUnit, u8rdcom, uget_block,                 &
             uterminate_block, UPCASE, URWORD, ULSTLB, UBDSV4,         &
@@ -14,7 +14,7 @@ module InputOutputModule
             ULASAV, ubdsv1, ubdsvc, ubdsvd, UWWORD,                   &
             same_word, get_node, get_ijk, unitinquire, GetLine,       &
             ParseLine, ulaprufw, write_centered, openfile,            &
-            block_to_chararray, linear_interpolate, lowcase,          &
+            linear_interpolate, lowcase,                              &
             read_line, read_data_line, uget_any_block,                &
             GetFileFromPath, extract_idnum_or_bndname, urdaux,        &
             get_jk, uget_block_line, print_format, BuildFixedFormat,  &
@@ -165,9 +165,9 @@ module InputOutputModule
       write(errmsg,2014) accarg
       call store_error(errmsg)
       write(errmsg,2015) filact
-      call store_error(errmsg)      
+      call store_error(errmsg)
       write(errmsg,2016) ivar
-      call store_error(errmsg)      
+      call store_error(errmsg)
       write(errmsg,2018)
       call store_error(errmsg)
       call ustop()
@@ -248,15 +248,14 @@ module InputOutputModule
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END
     implicit none
     ! -- dummy
-    integer(I4B), intent(in) :: iin
-    integer(I4B), intent(in) :: iout
+    integer(I4B),         intent(in) :: iin
+    integer(I4B),         intent(in) :: iout
     character (len=*), intent(inout) :: line
-    integer(I4B), intent(inout) :: ierr
+    integer(I4B),        intent(out) :: ierr
     ! -- local definitions
     character (len=2), parameter :: comment = '//'
-    character(len=LINELENGTH) :: errmsg
-    !character(len=LINELENGTH) :: readerrmsg
-    character(len=1), parameter :: tab = CHAR(9)
+    character(len=LINELENGTH)    :: errmsg
+    character(len=1), parameter  :: tab = CHAR(9)
     logical :: iscomment
     integer(I4B) :: i, l
 ! ------------------------------------------------------------------------------
@@ -330,7 +329,7 @@ module InputOutputModule
   subroutine uget_block_line(iu, iuext, iout, line, lloc, istart, istop)
 ! ******************************************************************************
 ! Read and return line read from an external file or from within a block.
-! The line is read from an external file if iu is not equal to iuext  
+! The line is read from an external file if iu is not equal to iuext
 ! ******************************************************************************
 !
 !    SPECIFICATIONS:
@@ -365,9 +364,9 @@ module InputOutputModule
     return
   end subroutine uget_block_line
 
-  
+
   subroutine uget_block(iin,iout,ctag,ierr,isfound,lloc,line,iuext,             &
-                        continueread, supportopenclose)
+                        blockRequired, supportopenclose)
 ! ******************************************************************************
 ! Read until the ctag block is found.  Return isfound with true, if found.
 ! ******************************************************************************
@@ -376,16 +375,16 @@ module InputOutputModule
 ! ------------------------------------------------------------------------------
     implicit none
     ! -- dummy
-    integer(I4B), intent(in) :: iin
-    integer(I4B), intent(in) :: iout
-    character (len=*), intent(in) :: ctag
-    integer(I4B), intent(inout) :: ierr
-    logical, intent(inout) :: isfound
-    integer(I4B), intent(inout) :: lloc
+    integer(I4B),         intent(in) :: iin
+    integer(I4B),         intent(in) :: iout
+    character (len=*),    intent(in) :: ctag
+    integer(I4B),        intent(out) :: ierr
+    logical,           intent(inout) :: isfound
+    integer(I4B),      intent(inout) :: lloc
     character (len=*), intent(inout) :: line
-    integer(I4B), intent(inout) :: iuext
-    logical, optional, intent(in) :: continueread
-    logical, optional, intent(in) :: supportopenclose
+    integer(I4B),      intent(inout) :: iuext
+    logical, optional,    intent(in) :: blockRequired
+    logical, optional,    intent(in) :: supportopenclose
     ! -- local
     integer(I4B) :: istart
     integer(I4B) :: istop
@@ -393,9 +392,15 @@ module InputOutputModule
     integer(I4B) :: lloc2
     real(DP) :: rval
     character(len=LINELENGTH) :: fname, line2
-    logical :: supportoc
+    character(len=MAXCHARLEN) :: ermsg
+    logical :: supportoc, blockRequiredLocal
 ! ------------------------------------------------------------------------------
     !code
+    if (present(blockRequired)) then
+      blockRequiredLocal = blockRequired
+    else
+      blockRequiredLocal = .true.
+    endif
     supportoc = .false.
     if (present(supportopenclose)) then
       supportoc = supportopenclose
@@ -438,12 +443,16 @@ module InputOutputModule
             end if
           end if
         else
-          if (present(continueread)) then
-            if (continueread) then
-              cycle
-            end if
-          end if
-          backspace(iin)
+          if (blockRequiredLocal) then
+            ermsg = 'Error: Required block "' // trim(ctag) // &
+                    '" not found. Found block "' // line(istart:istop) // &
+                    '" instead.'
+            call store_error(ermsg)
+            call store_error_unit(iuext)
+            call ustop()
+          else
+            backspace(iin)
+          endif
         end if
         exit mainloop
       end if
@@ -453,7 +462,7 @@ module InputOutputModule
 
   subroutine uget_any_block(iin,iout,isfound,lloc,line,ctagfound,iuext)
 ! ******************************************************************************
-! Read until any block is found. If found, return isfound as true and 
+! Read until any block is found. If found, return isfound as true and
 ! return block name in ctagfound.
 ! ******************************************************************************
 !
@@ -618,7 +627,7 @@ module InputOutputModule
 !------return.
       return
       end subroutine lowcase
-      
+
       subroutine UWWORD(LINE,ICOL,ILEN,NCODE,C,N,R,FMT,CENTER,LEFT,SEP)
       implicit none
       ! -- dummy
@@ -655,19 +664,19 @@ module InputOutputModule
             write(cfmt, '(A,I0,A,I0,A)') '(G', ILEN, '.', i, ')'
         end select
       end if
-      
+
       if (present(CENTER)) then
         lcenter = CENTER
       else
         lcenter = .FALSE.
       end if
-      
+
       if (present(LEFT)) then
         lleft = LEFT
       else
         lleft = .FALSE.
       end if
-     
+
       if (NCODE == 0 .or. NCODE == 1) then
         if (len_trim(adjustl(C)) > ILEN) then
           cval = adjustl(C)
@@ -676,7 +685,7 @@ module InputOutputModule
         end if
         if (lcenter) then
           i = len_trim(cval)
-          ispace = (ILEN - i) / 2 
+          ispace = (ILEN - i) / 2
           cval = repeat(' ', ispace) // trim(cval)
         else if (lleft) then
           cval = trim(adjustl(cval))
@@ -687,9 +696,9 @@ module InputOutputModule
           call UPCASE(cval)
         end if
       end if
-      
+
       istop = ICOL + ILEN
-      
+
       select case(NCODE)
         case(0, 1)
           write(LINE(ICOL:istop), cfmt) cval
@@ -700,7 +709,7 @@ module InputOutputModule
       end select
 
       ICOL = istop
-      
+
       if (present(SEP)) then
         i = len(SEP)
         istop = ICOL + i
@@ -1719,83 +1728,6 @@ module InputOutputModule
     return
   end subroutine write_centered
 
-  subroutine block_to_chararray(filename, blockname, chararray, ierr, ftype_opt)
-! ******************************************************************************
-! block_to_chararray -- Read a block of information and return it as an array
-!   of strings, excluding the comments.
-!     filename is the name of the file to read from.  The file will be opened
-!       and then closed when done.
-!     blockname is the name of the block to read.  It have the BEGIN blockname
-!       and END blockname for it to be valid.
-!     chararray should be an unallocated array of strings.  chararray will be
-!       filled with the block information.
-!     ierr is an error flag.  If non-zero, then an error was encountered.
-!     ftype_opt is an option ftype for filename that is required by openfile.
-! ******************************************************************************
-!
-!    SPECIFICATIONS:
-! ------------------------------------------------------------------------------
-    ! -- modules
-    use ArrayHandlersModule, only: ExpandArray
-    implicit none
-    ! -- dummy
-    character(len=*), intent(in) :: filename
-    character(len=*), intent(in) :: blockname
-    character(len=*), dimension(:), allocatable :: chararray
-    integer(I4B), intent(inout) :: ierr
-    character(len=*), intent(in), optional :: ftype_opt
-    ! -- local
-    character(len=LINELENGTH) :: line
-    character(len=20) :: ftype
-    logical :: isfound, continueread
-    integer(I4B) :: inunit, iout, lloc, istart, istop, ival, i, iuext
-    real(DP) :: rval
-! ------------------------------------------------------------------------------
-    !
-    ! -- Open the file
-    ftype = 'NAM'
-    if(present(ftype_opt)) ftype = ftype_opt
-    inunit = 99
-    call openfile(inunit, 0, filename, ftype)
-    !
-    ! -- Find the specified block
-    iout = 0
-    continueread = .true.
-    lloc = 1
-    call uget_block(inunit, iout, blockname, ierr, isfound, lloc, line,  &
-                    iuext, continueread)
-    !
-    ! -- Process the block
-    if(isfound) then
-      i = 1
-      readloop: do
-        lloc = 1
-        call u8rdcom(iuext, iout, line, ierr)
-        if (ierr /= 0) exit readloop
-        call urword(line, lloc, istart, istop, 1, ival, rval, iout, iuext)
-        select case (line(istart:istop))
-        case ('END','BEGIN')
-          call uterminate_block(inunit, iout, line(istart:istop), blockname,   &
-                                lloc, line, ierr, iuext)
-          if(ierr==0) exit readloop
-        case default
-          call ExpandArray(chararray)
-          chararray(i) = line(1:LINELENGTH)
-          i = i + 1
-        end select
-      enddo readloop
-    endif
-    !
-    ! -- Return an allocated array, but of size zero
-    if (.not. allocated(chararray)) allocate(chararray(0))
-    !
-    ! -- Close the file
-    close(inunit)
-    !
-    ! -- Return
-    return
-  end subroutine block_to_chararray
-
   function linear_interpolate(t0, t1, y0, y1, t) result(y)
     implicit none
     ! -- dummy
@@ -1937,7 +1869,7 @@ module InputOutputModule
     !
     return
   end function read_data_line
-  
+
   subroutine GetFileFromPath(pathname, filename)
     implicit none
     ! -- dummy
@@ -1970,8 +1902,8 @@ module InputOutputModule
   end subroutine GetFileFromPath
 
   subroutine extract_idnum_or_bndname(line, icol, istart, istop, idnum, bndname)
-    ! Starting at position icol, define string as line(istart:istop). 
-    ! If string can be interpreted as an integer(I4B), return integer in idnum argument. 
+    ! Starting at position icol, define string as line(istart:istop).
+    ! If string can be interpreted as an integer(I4B), return integer in idnum argument.
     ! If token is not an integer(I4B), assume it is a boundary name, return NAMEDBOUNDFLAG
     ! in idnum, convert string to uppercase and return it in bndname.
     implicit none
@@ -2046,9 +1978,9 @@ module InputOutputModule
           trim(adjustl(text)), auxname(naux)
       endif
     enddo auxloop
-  
+
   end subroutine urdaux
-  
+
   subroutine print_format(linein, cdatafmp, editdesc, nvaluesp, nwidthp, inunit)
 ! ******************************************************************************
 ! print_format -- define the print or save format
@@ -2056,7 +1988,7 @@ module InputOutputModule
 !
 !    SPECIFICATIONS:
 ! ------------------------------------------------------------------------------
-! Define cdatafmp as a Fortran output format based on user input.  Also define 
+! Define cdatafmp as a Fortran output format based on user input.  Also define
 ! nvalues, nwidth, and editdesc.
 !
 !   Syntax for linein:
@@ -2341,5 +2273,5 @@ module InputOutputModule
     !
     return
   end subroutine BuildIntFormat
-  
+
 END MODULE InputOutputModule

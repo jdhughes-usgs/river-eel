@@ -1,14 +1,14 @@
 module GwfStoModule
-  
+
   use KindModule,             only: DP, I4B
   use ConstantsModule,        only: DZERO, DEM6, DEM4, DONE, LENBUDTXT
-  use SmoothingModule,        only: sQuadraticSaturation,                      & 
+  use SmoothingModule,        only: sQuadraticSaturation,                      &
                                     sQuadraticSaturationDerivative,            &
                                     sQSaturation, sLinearSaturation
   use BaseDisModule,          only: DisBaseType
   use NumericalPackageModule, only: NumericalPackageType
   use BlockParserModule,      only: BlockParserType
-  
+
   implicit none
   public :: GwfStoType, sto_cr
 
@@ -43,7 +43,7 @@ module GwfStoModule
     procedure, private :: read_options
     procedure, private :: read_data
   endtype
-  
+
   contains
 
   subroutine sto_cr(stoobj, name_model, inunit, iout)
@@ -79,7 +79,7 @@ module GwfStoModule
     ! -- Return
     return
   end subroutine sto_cr
-  
+
   subroutine sto_ar(this, dis, ibound)
 ! ******************************************************************************
 ! sto_ar -- Allocate and Read
@@ -226,7 +226,7 @@ module GwfStoModule
     !else
     !  write(this%iout,fmtlsp) 'STORAGE VALUES'
     endif
-    
+
     write(this%iout,'(//1X,A,I0,A,A,/)') &
       'STRESS PERIOD ', kper, ' IS ', trim(adjustl(css(this%iss)))
     !
@@ -254,7 +254,7 @@ module GwfStoModule
                             idxglo, rhs)
 ! ******************************************************************************
 ! sto_fc -- Fill the solution amat and rhs with storage contribution newton
-!               term  
+!               term
 ! ******************************************************************************
 !
 !    SPECIFICATIONS:
@@ -310,7 +310,7 @@ module GwfStoModule
         if (ss1 < DONE) then
           ss1 = DZERO
           ssh1 = tp
-        end if  
+        end if
       end if
       ! -- storage coefficients
       rho1 = this%sc1(n) * tled
@@ -457,7 +457,7 @@ module GwfStoModule
     real(DP) :: rate
     real(DP) :: tled, rho1, rho2
     real(DP) :: tp, bt, tthk
-    real(DP) :: snold, snnew 
+    real(DP) :: snold, snnew
     real(DP) :: ss0, ss1, ssh0, ssh1
     real(DP) :: rssin, rssout, rsyin, rsyout
 ! ------------------------------------------------------------------------------
@@ -617,7 +617,7 @@ module GwfStoModule
       call mem_deallocate(this%strgss)
       call mem_deallocate(this%strgsy)
     endif
-    !    
+    !
     ! -- Scalars
     call mem_deallocate(this%isfac)
     call mem_deallocate(this%isseg)
@@ -740,7 +740,7 @@ module GwfStoModule
 ! ------------------------------------------------------------------------------
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, blockRequired=.false.)
     !
     ! -- parse options block if detected
     if (isfound) then
@@ -757,9 +757,9 @@ module GwfStoModule
             this%isfac = 1
             write(this%iout,fmtstoc)
           !
-          ! -- right now these are options that are only available in the 
+          ! -- right now these are options that are only available in the
           !    development version and are not included in the documentation.
-          !    These options are only available when IDEVELOPMODE in 
+          !    These options are only available when IDEVELOPMODE in
           !    constants module is set to 1
           case ('NO_NEWTON')
             call this%parser%DevOpt()

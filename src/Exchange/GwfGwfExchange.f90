@@ -4,8 +4,7 @@ module GwfGwfExchangeModule
   use ArrayHandlersModule,     only: ExpandArray
   use BaseModelModule,         only: GetBaseModelFromList
   use BaseExchangeModule,      only: BaseExchangeType, AddBaseExchangeToList
-  use ConstantsModule,         only: LENBOUNDNAME, NAMEDBOUNDFLAG, DNODATA, &
-                                     DZERO
+  use ConstantsModule,         only: LENBOUNDNAME, NAMEDBOUNDFLAG
   use ListsModule,             only: basemodellist
   use NumericalExchangeModule, only: NumericalExchangeType
   use NumericalModelModule,    only: NumericalModelType
@@ -14,7 +13,7 @@ module GwfGwfExchangeModule
   use GwfMvrModule,            only: GwfMvrType
   use ObserveModule,           only: ObserveType
   use ObsModule,               only: ObsType
-  use SimModule,               only: count_errors, store_error, &
+  use SimModule,               only: count_errors, store_error,                &
                                      store_error_unit, ustop
   use BlockParserModule,       only: BlockParserType
 
@@ -677,7 +676,7 @@ contains
     integer(I4B) :: icbcfl, ibudfl
     real(DP) :: ratin, ratout, rrate, deltaqgnc
     ! -- formats
-    character(len=*), parameter :: fmttkk = &
+    character(len=*), parameter :: fmttkk =                                    &
       "(1X,/1X,A,'   PERIOD ',I0,'   STEP ',I0)"
 ! ------------------------------------------------------------------------------
     !
@@ -899,10 +898,10 @@ contains
     ! -- format
     character(len=*), parameter :: fmtheader =                                 &
      "(/1x, 'SUMMARY OF EXCHANGE RATES FOR EXCHANGE ', a, ' WITH ID ', i0, /,  &
-       2a16, 5a16, /, 112('-'))"
+       &2a16, 5a16, /, 112('-'))"
     character(len=*), parameter :: fmtheader2 =                                &
      "(/1x, 'SUMMARY OF EXCHANGE RATES FOR EXCHANGE ', a, ' WITH ID ', i0, /,  &
-       2a16, 4a16, /, 96('-'))"
+       &2a16, 4a16, /, 96('-'))"
     character(len=*), parameter :: fmtdata =                                   &
      "(2a16, 5(1pg16.6))"
 ! ------------------------------------------------------------------------------
@@ -975,7 +974,7 @@ contains
 ! ------------------------------------------------------------------------------
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, blockRequired=.false.)
     !
     ! -- parse options block if detected
     if (isfound) then
@@ -1359,7 +1358,7 @@ contains
     character(len=30) :: nodestrn, nodestrm
     character(len=*),parameter :: fmtrwt =                                     &
       "(1x, 'CELL ',A,' REWET FROM GWF MODEL ',A,' CELL ',A,                   &
-        ' FOR ITER. ',I0, ' STEP ',I0, ' PERIOD ', I0)"
+       &' FOR ITER. ',I0, ' STEP ',I0, ' PERIOD ', I0)"
 ! ------------------------------------------------------------------------------
     !
     ! -- Use model 1 to rewet model 2 and vice versa
@@ -1500,7 +1499,7 @@ contains
 ! ------------------------------------------------------------------------------
     ! -- modules
     use MemoryManagerModule, only: mem_allocate
-    use ConstantsModule, only: LENORIGIN
+    use ConstantsModule, only: LENORIGIN, DZERO
     ! -- dummy
     class(GwfExchangeType) :: this
     ! -- local
@@ -1547,7 +1546,6 @@ contains
 ! ------------------------------------------------------------------------------
     ! -- modules
     use MemoryManagerModule, only: mem_deallocate
-    use ConstantsModule, only: LENORIGIN
     ! -- dummy
     class(GwfExchangeType) :: this
     ! -- local
@@ -1664,6 +1662,8 @@ contains
 !
 !    SPECIFICATIONS:
 ! ------------------------------------------------------------------------------
+    ! -- modules
+    use ConstantsModule, only: DZERO
     ! -- dummy
     class(GwfExchangeType) :: this
     ! -- local
@@ -1675,6 +1675,7 @@ contains
     ! -- formats
 10  format('Error: Boundary "',a,'" for observation "',a,               &
            '" is invalid in package "',a,'"')
+! ------------------------------------------------------------------------------
     !
     do i=1,this%obs%npakobs
       obsrv => this%obs%pakobs(i)%obsrv
@@ -1815,7 +1816,8 @@ contains
               v = v + this%gnc%deltaqgnc(iexg)
             endif
           case default
-            msg = 'Error: Unrecognized observation type: ' // trim(obsrv%ObsTypeId)
+            msg = 'Error: Unrecognized observation type: ' //                  &
+                  trim(obsrv%ObsTypeId)
             call store_error(msg)
             call store_error_unit(this%inobs)
             call ustop()
@@ -1831,7 +1833,7 @@ contains
   subroutine gwf_gwf_process_obsID(obsrv, dis, inunitobs, iout)
 ! ******************************************************************************
 ! -- This procedure is pointed to by ObsDataType%ProcesssIdPtr. It processes
-!    the ID string of an observation definition for GWF-GWF-package observations.
+!    the ID string of an observation definition for GWF-GWF-package observations
 ! ******************************************************************************
 !
 !    SPECIFICATIONS:

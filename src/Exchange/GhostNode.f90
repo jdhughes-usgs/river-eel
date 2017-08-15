@@ -71,7 +71,7 @@ module GhostNodeModule
     allocate(gncobj)
     !
     ! -- create name and origin.  name_parent will either be model name or the
-    !    exchange name.  
+    !    exchange name.
     call gncobj%set_names(1, name_parent, 'GNC', 'GNC')
     !
     ! -- allocate scalars
@@ -87,7 +87,7 @@ module GhostNodeModule
 
   subroutine gnc_df(this, m1, m2)
 ! ******************************************************************************
-! gnc_df -- Initialize a gnc object.  
+! gnc_df -- Initialize a gnc object.
 ! ******************************************************************************
 !
 !    SPECIFICATIONS:
@@ -306,10 +306,10 @@ module GhostNodeModule
     ! -- return
     return
   end subroutine gnc_mc
-  
+
   subroutine gnc_fmsav(this, kiter, iasln, amatsln)
 ! ******************************************************************************
-! gnc_fmsav -- Store the n-m Picard conductance in cond prior to the Newton 
+! gnc_fmsav -- Store the n-m Picard conductance in cond prior to the Newton
 !   terms being added.
 ! ******************************************************************************
 !
@@ -455,7 +455,7 @@ module GhostNodeModule
       if(this%m1%ibound(noden) == 0 .or. &
          this%m2%ibound(nodem) == 0) cycle gncloop
       !
-      ! -- Assign variables depending on whether single model gnc or exchange 
+      ! -- Assign variables depending on whether single model gnc or exchange
       !    gnc
       if(this%smgnc) then
         ipos = this%m1%dis%con%getjaindex(noden, nodem)
@@ -469,7 +469,7 @@ module GhostNodeModule
       !
       ! If vertical connection and not variable cv, then cycle
       if(ihc == 0 .and. ivarcv == 0) cycle
-      !  
+      !
       ! determine upstream node (0 is noden, 1 is nodem)
       iups = 0
       if (this%m2%x(nodem) > this%m1%x(noden)) iups = 1
@@ -725,7 +725,7 @@ module GhostNodeModule
     ! -- Return
     return
   end subroutine allocate_arrays
-  
+
   subroutine gnc_da(this)
 ! ******************************************************************************
 ! gnc_da -- deallocate
@@ -786,7 +786,7 @@ module GhostNodeModule
 ! ------------------------------------------------------------------------------
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, blockRequired=.false.)
     !
     ! -- parse options block if detected
     if (isfound) then

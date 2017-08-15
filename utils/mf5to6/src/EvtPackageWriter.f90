@@ -154,13 +154,18 @@ contains
       call this%BuildEvtArrayFormat() !this%DataWidth, 7, 100, this%evtfmat, this%FieldsPerLine)
     endif
     !
-    ! Write Options and Dimensions blocks
+    ! Write Options block
     call this%WriteOptions()
-    call this%WriteDimensions()
+    !
+    ! Dimensions block is not needed if READASARRAYS is used.
+    ! READASARRAYS is used unless ETS function uses more than 1 segment.
+    if (this%nseg > 1) then
+      call this%WriteDimensions()
+    endif
     !
     return
   end subroutine ProcessAllocate
-  
+
   subroutine BuildEvtArrayFormat(this)
     ! dummy
     class(EvtPackageWriterType) :: this
@@ -627,7 +632,7 @@ contains
   end subroutine AllocateEvtPointers
 
   function MyType(this) result (ctype)
-    ! dummy 
+    ! dummy
     class(EvtPackageWriterType) :: this
     character(len=LENCTYPE) :: ctype
     !

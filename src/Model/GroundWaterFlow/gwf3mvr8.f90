@@ -15,7 +15,7 @@
 !The mover is designed so that a reach can provide water to more than one
 !receiving reaches.  The available water will be consumed in order of
 !the movers listed in the package.  The mover is also designed so that
-!a receiver can receive water from more than one provider.  
+!a receiver can receive water from more than one provider.
 !
 !  1.  The mover is instantiated as a model member:
 !
@@ -43,7 +43,7 @@
 !
 !      if(this%inmvr > 0) call this%mvr%mvr_ar()
 !
-!      Mover aware packages allocate the three vectors (typically to size 
+!      Mover aware packages allocate the three vectors (typically to size
 !      maxbound)
 !
 !  4.  The RP method for the mover is called.  This reads the movers active
@@ -55,27 +55,27 @@
 !      the last time step.
 !
 !      if(this%inmvr > 0) call this%mvr%mvr_ad()
-!  
+!
 !      Mover aware packages then set:
 !        qtomvr(:) = 0.
-!        qformvr(:) = 0. 
+!        qformvr(:) = 0.
 !
-!  6.  In the CF routine, Mover aware packages set: 
+!  6.  In the CF routine, Mover aware packages set:
 !        qtformvr(:) = qformvr(:)
 !        qfrommvr(:) = 0.
 !        qtomvr(:) = 0.
 !
 !  7.  The FC method for the mover is called.  This method calculates the
 !      amount of water to move based on the amount of water available from the
-!      previous iteration.  This call updates the values in the qtomvr and 
-!      qfrommvr vectors inside the packages.  This is done by the mover package 
+!      previous iteration.  This call updates the values in the qtomvr and
+!      qfrommvr vectors inside the packages.  This is done by the mover package
 !      using pointers to the appropriate reach locations in qtomvr and qfrommvr.
 !
 !      if(this%inmvr > 0) call this%mvr%mvr_fc()  ! called from gwf%fc()
 !
 !      a. Mover aware packages first set qformvr(:) = 0.
 !      b. Mover aware packages add qfrommvr terms as a source of water
-!      c. Mover aware packages calculate qformvr as amount of water available 
+!      c. Mover aware packages calculate qformvr as amount of water available
 !         to be moved (these qformvr terms are used in the next iteration
 !         by this%mvr%mvr_fc() to calculate how much water is actually moved)
 !
@@ -104,7 +104,7 @@ module GwfMvrModule
   implicit none
   private
   public :: GwfMvrType, mvr_cr
-  
+
   type, extends(NumericalPackageType) :: GwfMvrType
     integer(I4B), pointer                         :: ibudgetout => null()       !binary budget output file
     integer(I4B), pointer                         :: maxmvr => null()           !max number of movers to be specified
@@ -138,7 +138,7 @@ module GwfMvrModule
     procedure :: allocate_scalars
     procedure :: allocate_arrays
   end type GwfMvrType
-  
+
   contains
 
   subroutine mvr_cr(mvrobj, name_parent, inunit, iout, iexgmvr)
@@ -160,7 +160,7 @@ module GwfMvrModule
     allocate(mvrobj)
     !
     ! -- create name and origin.  name_parent will either be model name or the
-    !    exchange name.  
+    !    exchange name.
     call mvrobj%set_names(1, name_parent, 'MVR', 'MVR')
     !
     ! -- Allocate scalars
@@ -674,7 +674,8 @@ module GwfMvrModule
 ! ------------------------------------------------------------------------------
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr, supportOpenClose=.true.)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, supportOpenClose=.true., &
+                              blockRequired=.false.)
     !
     ! -- parse options block if detected
     if (isfound) then
@@ -689,7 +690,7 @@ module GwfMvrModule
             if (keyword == 'FILEOUT') then
               call this%parser%GetString(fname)
               this%ibudgetout = getunit()
-              call openfile(this%ibudgetout, this%iout, fname, 'DATA(BINARY)',  & 
+              call openfile(this%ibudgetout, this%iout, fname, 'DATA(BINARY)',  &
                             form, access, 'REPLACE')
               write(this%iout,fmtmvrbin) 'BUDGET', fname, this%ibudgetout
             else
@@ -729,7 +730,7 @@ module GwfMvrModule
     ! -- Return
     return
     end subroutine read_options
-    
+
   subroutine check_options(this)
 ! ******************************************************************************
 ! check_options
@@ -770,7 +771,7 @@ module GwfMvrModule
     ! -- Return
     return
   end subroutine check_options
-    
+
   subroutine read_dimensions(this)
 ! ******************************************************************************
 ! read_dimensions -- Read the dimensions for this package
@@ -1001,5 +1002,5 @@ module GwfMvrModule
     return
   end subroutine allocate_arrays
 
-  
+
 end module

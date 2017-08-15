@@ -59,6 +59,7 @@ module SfrPackageWriterModule
     procedure, public :: ProcessStressLoop
     procedure, public :: ReviseReachNetwork
     procedure, public :: WriteOptions
+    procedure, public :: WriteDimensions
     procedure, public :: WriteStressPeriodListData
     ! private procedures
     procedure, private :: AddReach
@@ -283,6 +284,32 @@ contains
     !
     return
   end subroutine WriteOptions
+
+  subroutine WriteDimensions(this)
+    ! Overrides PackageWriterType%WriteDimensions
+    implicit none
+    class(SfrPackageWriterType) :: this
+    ! local
+    integer :: iu
+    ! formats
+    5  format()
+    30 format(2x,a,2x,i0)
+    60 format(a)
+    !
+    if (.not. this%NeedDimensionsBlock) return
+    !
+    iu = this%fileobj%IUnit
+    ! Write BEGIN Dimensions
+    write(iu,5)
+    write(iu,60)'BEGIN Dimensions'
+    !
+    write(iu,30)'NREACHES',this%MaxActiveBnd
+    !
+    ! Write END Dimensions
+    write(iu,60)'END Dimensions'
+    !
+    return
+  end subroutine WriteDimensions
 
   subroutine ProcessStressLoop(this, igrid)
     implicit none
@@ -1158,7 +1185,7 @@ module junk
 ! MAXIMUM_DEPTH_CHANGE             DLEAK
 ! UNIT_CONVERSION                  CONST
 ! SFR_OUTPUT                       file associated with ISTCB2 (if > 0)
-! MAXBOUND (# reaches)             NSTRM
+! NREACHES (# reaches)             NSTRM
 !
 ! REACH VALUES:
 ! rno (reach number)               --

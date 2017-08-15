@@ -1,6 +1,6 @@
 module ConnectionsModule
 
-  use ArrayReaders2Module, only: ReadArray2
+  use ArrayReadersModule, only: ReadArray
   use KindModule, only: DP, I4B
   use ConstantsModule,   only: LENMODELNAME, LENORIGIN
   use BlockParserModule, only: BlockParserType
@@ -240,28 +240,28 @@ module ConnectionsModule
         call this%parser%GetStringCaps(keyword)
         select case (keyword)
           case ('IAC')
-            call ReadArray2(this%parser%iuactive, this%ia, aname(1), 1, &
+            call ReadArray(this%parser%iuactive, this%ia, aname(1), 1, &
                             this%nodes, iout, 0)
             lname(1) = .true.
           case ('JA')
-            call ReadArray2(this%parser%iuactive, this%ja, aname(2), 1, &
+            call ReadArray(this%parser%iuactive, this%ja, aname(2), 1, &
                             this%nja, iout, 0)
             lname(2) = .true.
           case ('IHC')
-            call ReadArray2(this%parser%iuactive, ihctemp, aname(3), 1, &
+            call ReadArray(this%parser%iuactive, ihctemp, aname(3), 1, &
                             this%nja, iout, 0)
             lname(3) = .true.
           case ('CL12')
-            call ReadArray2(this%parser%iuactive, cl12temp, aname(4), 1, &
+            call ReadArray(this%parser%iuactive, cl12temp, aname(4), 1, &
                             this%nja, iout, 0)
             lname(4) = .true.
           case ('HWVA')
-            call ReadArray2(this%parser%iuactive, hwvatemp, aname(5), 1, &
+            call ReadArray(this%parser%iuactive, hwvatemp, aname(5), 1, &
                             this%nja, iout, 0)
             lname(5) = .true.
           case ('ANGLDEGX')
             allocate(angldegx(this%nja))
-            call ReadArray2(this%parser%iuactive, angldegx, aname(6), 1, &
+            call ReadArray(this%parser%iuactive, angldegx, aname(6), 1, &
                             this%nja, iout, 0)
             lname(6) = .true.
             this%ianglex = 1
@@ -492,11 +492,11 @@ module ConnectionsModule
         call this%parser%GetStringCaps(keyword)
         select case (keyword)
           case ('IAC')
-            call ReadArray2(this%parser%iuactive, this%ia, aname(1), 1, &
+            call ReadArray(this%parser%iuactive, this%ia, aname(1), 1, &
                             this%nodes, iout, 0)
             lname(1) = .true.
           case ('JA')
-            call ReadArray2(this%parser%iuactive, this%ja, aname(2), 1, &
+            call ReadArray(this%parser%iuactive, this%ja, aname(2), 1, &
                             this%nja, iout, 0)
             lname(2) = .true.
           case default

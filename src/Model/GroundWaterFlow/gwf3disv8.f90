@@ -1,6 +1,6 @@
 module GwfDisvModule
 
-  use ArrayReaders2Module, only: ReadArray2
+  use ArrayReadersModule, only: ReadArray
   use KindModule, only: DP, I4B
   use ConstantsModule, only: LINELENGTH
   use BaseDisModule, only: DisBaseType
@@ -11,7 +11,7 @@ module GwfDisvModule
   use BlockParserModule, only: BlockParserType
   use MemoryManagerModule, only: mem_allocate
   use TdisModule,          only: kstp, kper, pertim, totim, delt
-  
+
   implicit none
   private
   public disv_cr, GwfDisvType
@@ -193,7 +193,7 @@ module GwfDisvModule
 ! ------------------------------------------------------------------------------
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, blockRequired=.false.)
     !
     ! -- set default options
       this%lenuni = 0
@@ -334,7 +334,7 @@ module GwfDisvModule
     ! -- Return
     return
   end subroutine read_dimensions
-  
+
   subroutine read_griddata(this)
 ! ******************************************************************************
 ! read_griddata -- Read cell information (TOP, BOTM, IDOMAIN)
@@ -386,17 +386,17 @@ module GwfDisvModule
         call this%parser%GetStringCaps(keyword)
         select case (keyword)
           case ('TOP')
-            call ReadArray2(this%parser%iuactive, this%botm(:, :, 0),          &
+            call ReadArray(this%parser%iuactive, this%botm(:, :, 0),          &
                             aname(1), this%ndim, this%ncpl, 1, this%iout, 0)
             lname(1) = .true.
           case ('BOTM')
             call this%parser%GetStringCaps(keyword)
             if (keyword.EQ.'LAYERED') then
-              call ReadArray2(this%parser%iuactive,                            &
+              call ReadArray(this%parser%iuactive,                            &
                               this%botm(:,:,1:this%nlay), aname(2), this%ndim, &
                               this%ncpl, 1, this%nlay, this%iout, 1, this%nlay)
             else
-              call ReadArray2(this%parser%iuactive,                            &
+              call ReadArray(this%parser%iuactive,                            &
                               this%botm(:, :, 1:this%nlay), aname(2),          &
                               this%ndim, this%nodesuser, 1, 1, this%iout, 0, 0)
             end if
@@ -404,11 +404,11 @@ module GwfDisvModule
           case ('IDOMAIN')
             call this%parser%GetStringCaps(keyword)
             if (keyword.EQ.'LAYERED') then
-              call ReadArray2(this%parser%iuactive, this%idomain, aname(3),    &
+              call ReadArray(this%parser%iuactive, this%idomain, aname(3),    &
                               this%ndim, this%ncpl, 1, this%nlay, this%iout,   &
                               1, this%nlay)
             else
-              call ReadArray2(this%parser%iuactive, this%idomain, aname(3),    &
+              call ReadArray(this%parser%iuactive, this%idomain, aname(3),    &
                               this%ndim, this%nodesuser, 1, 1, this%iout,      &
                               0, 0)
             end if
@@ -585,7 +585,7 @@ module GwfDisvModule
           write(ermsg, fmtvnum) i, ival
           call store_error(ermsg)
           call this%parser%StoreErrorUnit()
-          call ustop()          
+          call ustop()
         endif
         !
         ! -- x
@@ -636,7 +636,7 @@ module GwfDisvModule
 
   subroutine read_cell2d(this)
 ! ******************************************************************************
-! read_cell2d -- Read information describing the two dimensional (x, y) 
+! read_cell2d -- Read information describing the two dimensional (x, y)
 !   configuration of each cell.
 ! ******************************************************************************
 !
@@ -675,8 +675,8 @@ module GwfDisvModule
     maxvert = 0
     maxvertcell = 0
     !
-    ! -- Initialize estimate of the max number of vertices for each cell 
-    !    (using 5 as default) and initialize the sparse matrix, which will 
+    ! -- Initialize estimate of the max number of vertices for each cell
+    !    (using 5 as default) and initialize the sparse matrix, which will
     !    temporarily store the vertex numbers for each cell.  This will
     !    be converted to iavert and javert after all cell vertices have
     !    been read.
@@ -699,7 +699,7 @@ module GwfDisvModule
           write(ermsg, fmtcnum) i, ival
           call store_error(ermsg)
           call store_error_unit(iuext)
-          call ustop()          
+          call ustop()
         endif
         !
         ! -- Cell x center
@@ -1128,7 +1128,7 @@ module GwfDisvModule
 
 !  subroutine connection_normal(this, noden, nodem, ihc, xcomp, ycomp, zcomp)
 !! ******************************************************************************
-!! connection_normal -- calculate the normal vector components for reduced 
+!! connection_normal -- calculate the normal vector components for reduced
 !!   nodenumber cell (noden) and its shared face with cell nodem.  ihc is the
 !!   horizontal connection flag.
 !! ******************************************************************************
@@ -1173,11 +1173,11 @@ module GwfDisvModule
 !    ! -- return
 !    return
 !  end subroutine connection_normal
-    
+
   subroutine connection_normal(this, noden, nodem, ihc, xcomp, ycomp, zcomp,   &
                                ipos)
 ! ******************************************************************************
-! connection_normal -- calculate the normal vector components for reduced 
+! connection_normal -- calculate the normal vector components for reduced
 !   nodenumber cell (noden) and its shared face with cell nodem.  ihc is the
 !   horizontal connection flag.
 ! ******************************************************************************
@@ -1230,11 +1230,11 @@ module GwfDisvModule
     ! -- return
     return
   end subroutine connection_normal
-    
+
 !  subroutine connection_vector(this, noden, nodem, nozee, satn, satm, ihc,   &
 !                               xcomp, ycomp, zcomp, conlen)
 !! ******************************************************************************
-!! connection_vector -- calculate the unit vector components from reduced 
+!! connection_vector -- calculate the unit vector components from reduced
 !!   nodenumber cell (noden) to its neighbor cell (nodem).  The saturation for
 !!   for these cells are also required so that the vertical position of the cell
 !!   cell centers can be calculated.  ihc is the horizontal flag.  Also return
@@ -1295,11 +1295,11 @@ module GwfDisvModule
 !    ! -- return
 !    return
 !  end subroutine connection_vector
-                               
+
   subroutine connection_vector(this, noden, nodem, nozee, satn, satm, ihc,   &
                                xcomp, ycomp, zcomp, conlen)
 ! ******************************************************************************
-! connection_vector -- calculate the unit vector components from reduced 
+! connection_vector -- calculate the unit vector components from reduced
 !   nodenumber cell (noden) to its neighbor cell (nodem).  The saturation for
 !   for these cells are also required so that the vertical position of the cell
 !   cell centers can be calculated.  ihc is the horizontal flag.  Also return
@@ -1370,7 +1370,7 @@ module GwfDisvModule
     ! -- return
     return
   end subroutine connection_vector
-    
+
   subroutine allocate_scalars(this, name_model)
 ! ******************************************************************************
 ! allocate_scalars -- Allocate and initialize scalars
@@ -1445,7 +1445,7 @@ module GwfDisvModule
 ! ******************************************************************************
 ! get_cell2d_area -- Calculate and return the signed area of the cell.  A
 !   negative area means the points are in counter clockwise orientation.
-!   a = 1/2 *[(x1*y2 + x2*y3 + x3*y4 + ... + xn*y1) - 
+!   a = 1/2 *[(x1*y2 + x2*y3 + x3*y4 + ... + xn*y1) -
 !             (x2*y1 + x3*y2 + x4*y3 + ... + x1*yn)]
 ! ******************************************************************************
 !
@@ -1503,7 +1503,7 @@ module GwfDisvModule
 ! ******************************************************************************
 ! nodeu_from_string -- Receive a string and convert the string to a user
 !   nodenumber.  The model discretization is DISV; read layer and cell number.
-!   If flag_string argument is present and true, the first token in string 
+!   If flag_string argument is present and true, the first token in string
 !   is allowed to be a string (e.g. boundary name). In this case, if a string
 !   is encountered, return value as -2.
 ! ******************************************************************************
@@ -1586,7 +1586,7 @@ module GwfDisvModule
 ! ******************************************************************************
 ! nodeu_from_cellid -- Receive cellid as a string and convert the string to a
 !   user nodenumber.
-!   If flag_string argument is present and true, the first token in string 
+!   If flag_string argument is present and true, the first token in string
 !   is allowed to be a string (e.g. boundary name). In this case, if a string
 !   is encountered, return value as -2.
 !   If allow_zero argument is present and true, if all indices equal zero, the
@@ -1666,7 +1666,7 @@ module GwfDisvModule
     ! -- return
     return
   end function nodeu_from_cellid
-  
+
   logical function supports_layers(this)
     implicit none
     ! -- dummy
@@ -1696,7 +1696,7 @@ module GwfDisvModule
     ! -- Return
     return
   end function get_ncpl
-  
+
   subroutine read_int_array(this, line, lloc, istart, istop, iout, in, &
                             iarray, aname)
 ! ******************************************************************************
@@ -1751,12 +1751,12 @@ module GwfDisvModule
     if (line(istart:istop).EQ.'LAYERED') then
       !
       ! -- Read layered input
-      call ReadArray2(in, itemp, aname, this%ndim, ncol, nrow, nlay, nval, &
+      call ReadArray(in, itemp, aname, this%ndim, ncol, nrow, nlay, nval, &
                       iout, 1, nlay)
     else
       !
       ! -- Read unstructured input
-      call ReadArray2(in, itemp, aname, this%ndim, nval, iout, 0)
+      call ReadArray(in, itemp, aname, this%ndim, nval, iout, 0)
     end if
     !
     ! -- If reduced model, then need to copy from itemp(=>ibuff) to iarray
@@ -1826,12 +1826,12 @@ module GwfDisvModule
     if (line(istart:istop).EQ.'LAYERED') then
       !
       ! -- Read structured input
-      call ReadArray2(in, dtemp, aname, this%ndim, ncol, nrow, nlay, nval, &
+      call ReadArray(in, dtemp, aname, this%ndim, ncol, nrow, nlay, nval, &
                       iout, 1, nlay)
     else
       !
       ! -- Read unstructured input
-      call ReadArray2(in, dtemp, aname, this%ndim, nval, iout, 0)
+      call ReadArray(in, dtemp, aname, this%ndim, nval, iout, 0)
     end if
     !
     ! -- If reduced model, then need to copy from dtemp(=>dbuff) to darray
@@ -1880,7 +1880,7 @@ module GwfDisvModule
     !
     ! -- Read the array
     nval = ncol * nrow
-    call ReadArray2(inunit, this%dbuff, aname, this%ndim, nval, iout, 0)
+    call ReadArray(inunit, this%dbuff, aname, this%ndim, nval, iout, 0)
     !
     ! -- Copy array into bound
     ipos = 1
@@ -1944,7 +1944,7 @@ module GwfDisvModule
     character(len=*), intent(in)                   :: aname
     character(len=*), intent(in)                   :: cdatafmp
     integer(I4B), intent(in)                       :: nvaluesp
-    integer(I4B), intent(in)                       :: nwidthp 
+    integer(I4B), intent(in)                       :: nwidthp
     character(len=*), intent(in)                   :: editdesc
     real(DP), intent(in)                           :: dinact
     ! -- local
@@ -2093,7 +2093,7 @@ module GwfDisvModule
     ncol = this%mshape(2)
     !
     nval = ncol * nrow
-    call ReadArray2(inunit, this%ibuff, aname, this%ndim, nval, iout, 0)
+    call ReadArray(inunit, this%ibuff, aname, this%ndim, nval, iout, 0)
     !
     ! -- Copy array into nodelist
     ipos = 1

@@ -16,7 +16,7 @@ module SimulationCreateModule
                                     solutiongrouplist
   use BaseModelModule,        only: GetBaseModelFromList
   use BlockParserModule,      only: BlockParserType
-  
+
   implicit none
   private
   public :: simulation_cr
@@ -208,7 +208,7 @@ module SimulationCreateModule
 ! ------------------------------------------------------------------------------
     !
     ! -- Process OPTIONS block
-    call parser%GetBlock('OPTIONS', isfound, ierr)
+    call parser%GetBlock('OPTIONS', isfound, ierr, blockRequired=.false.)
     if (isfound) then
       write(iout,'(/1x,a)')'READING SIMULATION OPTIONS'
       do
@@ -326,6 +326,7 @@ module SimulationCreateModule
     logical :: isfound, endOfBlock
     integer(I4B) :: im
     integer(I4B) :: ilen
+    integer(I4B) :: i
     character(len=LINELENGTH) :: errmsg
     character(len=LINELENGTH) :: keyword
     character(len=LINELENGTH) :: fname, mname
@@ -358,11 +359,25 @@ module SimulationCreateModule
               call parser%StoreErrorUnit()
               call ustop()
             endif
+            do i = 1, ilen
+              if (mname(i:i) == ' ') then
+                write(errmsg, '(4x,a,a)')                                      &
+                      'ERROR. INVALID MODEL NAME: ', trim(mname)
+                call store_error(errmsg)
+                write(errmsg, '(4x,a)')                                        &
+                      'MODEL NAME CANNOT HAVE SPACES WITHIN IT.'
+                call store_error(errmsg)
+                call parser%StoreErrorUnit()
+                call ustop()
+              endif
+            enddo
             modelname(im) = mname
+            write(iout, '(4x,a,i0)') 'GWF6 model ' // trim(mname) //           &
+              ' will be created as model ',im
             call gwf_cr(fname, im, modelname(im))
           case default
             write(errmsg, '(4x,a,a)') &
-                  '****ERROR. UNKNOWN SIMULATION MODEL: ', &
+                  '****ERROR. UNKNOWN SIMULATION MODEL: ',                     &
                   trim(keyword)
             call store_error(errmsg)
             call parser%StoreErrorUnit()
@@ -402,7 +417,7 @@ module SimulationCreateModule
     character(len=LINELENGTH) :: fname, name1, name2
     ! -- formats
     character(len=*), parameter :: fmtmerr = "('Error in simulation control ', &
-      'file.  Could not find model: ', a)"
+      &'file.  Could not find model: ', a)"
 ! ------------------------------------------------------------------------------
     call parser%GetBlock('EXCHANGES', isfound, ierr)
     if (isfound) then
@@ -440,6 +455,8 @@ module SimulationCreateModule
             endif
             !
             ! -- Create the exchange object.
+            write(iout, '(4x,a,i0,a,i0,a,i0)') 'GWF6-GWF6 exchange ', id,      &
+              ' will be created to connect model ', m1, ' with model ', m2
             call gwfexchange_create(fname, id, m1, m2)
           case default
             write(errmsg, '(4x,a,a)') &
@@ -493,8 +510,8 @@ module SimulationCreateModule
     ! -- formats
     character(len=*), parameter :: fmterrmxiter = &
       "('ERROR. MXITER IS SET TO ', i0, ' BUT THERE IS ONLY ONE SOLUTION',     &
-        ' IN SOLUTION GROUP ', i0, ' SET MXITER TO 1 IN SIMULATION CONTROL',   &
-        ' FILE.')"
+        &' IN SOLUTION GROUP ', i0, '. SET MXITER TO 1 IN SIMULATION CONTROL', &
+        &' FILE.')"
 ! ------------------------------------------------------------------------------
     !
     ! -- isoln is the cumulative solution number, isgp is the cumulative

@@ -18,7 +18,8 @@ module TimeSeriesModule
   private
   public :: TimeSeriesType, TimeSeriesGroupType, ConstructTimeSeriesGroup, &
             TimeSeriesContainerType, AddTimeSeriesGroupToList, &
-            GetTimeSeriesGroupFromList, SameTimeSeries
+            GetTimeSeriesGroupFromList, SameTimeSeries, &
+            CastAsTimeSeriesGroupClass
   private :: epsil
 
   real(DP), parameter :: epsil = 1.0d-10
@@ -28,10 +29,10 @@ module TimeSeriesModule
     integer(I4B),                       public :: iMethod = UNDEFINED
     character(len=LENTIMESERIESNAME),   public :: Name = ''
     ! -- Private members
-    real(DP),                           private :: sfac = DONE
-    logical,                            private :: autoDeallocate = .true.
-    type(ListType),            pointer, private :: list => null()
-    type(TimeSeriesGroupType), pointer, private :: group => null()
+    real(DP),                            private :: sfac = DONE
+    logical,                             public  :: autoDeallocate = .true.
+    type(ListType),             pointer, private :: list => null()
+    class(TimeSeriesGroupType), pointer, private :: group => null()
   contains
     ! -- Public procedures
     procedure, public :: AddTimeSeriesRecord
@@ -59,12 +60,12 @@ module TimeSeriesModule
 
   type TimeSeriesGroupType
     ! -- Private members
-    integer(I4B),                                private :: inunit = 0
-    integer(I4B),                                private :: iout = 0
-    integer(I4B),                                private :: nTimeSeries = 0
-    character(len=LINELENGTH),                   private :: datafile = ''
-    type(TimeSeriesType), dimension(:), pointer, private :: timeSeries => null()
-    type(BlockParserType), pointer,              private :: parser
+    integer(I4B),                                public :: inunit = 0
+    integer(I4B),                                public :: iout = 0
+    integer(I4B),                                public :: nTimeSeries = 0
+    character(len=LINELENGTH),                   public :: datafile = ''
+    type(TimeSeriesType), dimension(:), pointer, public :: timeSeries => null()
+    type(BlockParserType), pointer,              public :: parser
   contains
     ! -- Public procedures
     procedure, public :: Count
@@ -109,11 +110,27 @@ contains
     return
   end function CastAsTimeSeriesGroupType
 
+  function CastAsTimeSeriesGroupClass(obj) result(res)
+    ! Cast an unlimited polymorphic object as class(TimeSeriesGroupType)
+    implicit none
+    class(*), pointer, intent(inout) :: obj
+    type(TimeSeriesGroupType), pointer :: res
+    !
+    res => null()
+    if (.not. associated(obj)) return
+    !
+    select type (obj)
+    class is (TimeSeriesGroupType)
+      res => obj
+    end select
+    return
+  end function CastAsTimeSeriesGroupClass
+
   subroutine AddTimeSeriesGroupToList(list, tsgroup)
     implicit none
     ! -- dummy
-    type(ListType),                     intent(inout) :: list
-    type(TimeSeriesGroupType), pointer, intent(inout) :: tsgroup
+    type(ListType),                      intent(inout) :: list
+    class(TimeSeriesGroupType), pointer, intent(inout) :: tsgroup
     ! -- local
     class(*), pointer :: obj
     !
@@ -134,6 +151,10 @@ contains
     !
     obj => list%GetItem(idx)
     res => CastAsTimeSeriesGroupType(obj)
+    !
+    if (.not. associated(res)) then
+      res => CastAsTimeSeriesGroupClass(obj)
+    endif
     !
     return
   end function GetTimeSeriesGroupFromList
@@ -219,7 +240,7 @@ contains
     implicit none
     ! -- dummy
     class(TimeSeriesType), intent(inout) :: this
-    type(TimeSeriesGroupType), target    :: group
+    class(TimeSeriesGroupType), target   :: group
     character(len=*),      intent(in)    :: name
     logical, intent(in), optional        :: autoDeallocate
     ! -- local

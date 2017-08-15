@@ -416,7 +416,7 @@ contains
     character(len=MAXCHARLEN) :: line
     integer :: i, iu, j, kk, kl, kha
     ! formats
-    5 format('#',4x,'uzfid',6x,'finf',13x,'pet',12x,'extdp',12x,'extwc',12x, &
+    5 format('#',4x,'iuzno',6x,'finf',13x,'pet',12x,'extdp',12x,'extwc',12x, &
              ' ha  ',12x,'hroot',12x,'rootact')
     10 format(2x,a,2x,i0,2x,a)
     20 format(4x,i0,7(2x,g15.8))
@@ -453,14 +453,14 @@ contains
     ! dummy
     class(UzfPackageWriterType) :: this
     ! local
-    integer :: i, j, iu, k, landflag, vertcon
+    integer :: iuzno, i, j, iu, k, landflag, vertcon
     integer :: kl, kha
     double precision :: vk, thr, ths, thi, ep
     ! formats
     5  format()
-    20 format('# cellid landflag vertcon surfdep',9x,'vks',14x,'thtr',13x, &
+    20 format('# iuzno cellid landflag vertcon surfdep',9x,'vks',14x,'thtr',13x, &
               'thts',13x,'thti',14x,'eps')
-    30 format(5(2x,i0),6(2x,g15.8))
+    30 format(2x,i0, 5(2x,i0), 6(2x,g15.8))
     60 format(a)
     !
     call SGWF2BAS7PNT(this%igrid)
@@ -476,6 +476,7 @@ contains
     !
     ! For each active UZF cell, need to write:
     ! layer row column landflag vertcon surfdep vks thtr thts thti eps
+    iuzno = 1
     kloop: do kl=1,this%kdim
       rowloop: do i=1,NROW
         colloop: do j=1,NCOL
@@ -507,7 +508,8 @@ contains
             ths = THTS(j,i)
             thi = THTI(j,i)
             ep = EPS(j,i)
-            write(iu,30)k, i, j, landflag, vertcon, SURFDEP, vk, thr, ths, thi, ep
+            write(iu,30) iuzno, k, i, j, landflag, vertcon, SURFDEP, vk, thr, ths, thi, ep
+            iuzno = iuzno + 1
           endif
         enddo colloop
       enddo rowloop

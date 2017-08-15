@@ -97,12 +97,12 @@ contains
   subroutine GetBlock(this, blockName, isFound, ierr, supportOpenClose, &
                       blockRequired, blockNameFound)
     ! -- dummy
-    class(BlockParserType), intent(inout) :: this
-    character(len=*),       intent(in)    :: blockName
-    logical,                intent(out)   :: isFound
-    integer(I4B),                intent(inout) :: ierr
-    logical,         intent(in), optional :: supportOpenClose ! default false
-    logical,         intent(in), optional :: blockRequired    ! default true
+    class(BlockParserType),     intent(inout) :: this
+    character(len=*),           intent(in)    :: blockName
+    logical,                    intent(out)   :: isFound
+    integer(I4B),               intent(out)   :: ierr
+    logical,             intent(in), optional :: supportOpenClose ! default false
+    logical,             intent(in), optional :: blockRequired    ! default true
     character(len=*), intent(inout), optional :: blockNameFound
     ! -- local
     logical :: continueRead, supportOpenCloseLocal, blockRequiredLocal
@@ -118,14 +118,20 @@ contains
     else
       blockRequiredLocal = .true.
     endif
-    continueRead = .not. blockRequiredLocal
+    !continueRead = .not. blockRequiredLocal
+    continueRead = blockRequiredLocal
     this%blockName = blockName
     this%blockNameFound = ''
     !
     if (blockName == '*') then
       call uget_any_block(this%inunit, this%iout, isFound, this%lloc, &
                           this%line, blockNameFound, this%iuext)
-      if (isFound) this%blockNameFound = blockNameFound
+      if (isFound) then
+        this%blockNameFound = blockNameFound
+        ierr = 0
+      else
+        ierr = 1
+      endif
     else
       call uget_block(this%inunit, this%iout, this%blockName, ierr, isFound, &
                       this%lloc, this%line, this%iuext, continueRead, &

@@ -7,7 +7,7 @@ module SimModule
   public :: count_errors, iverbose, sim_message, store_error, ustop,  &
             converge_reset, converge_check, final_message, store_warning,      &
             store_note, count_warnings, count_notes, store_error_unit, &
-            store_error_filename
+            store_error_filename, print_notes
   integer(I4B) :: iverbose=0 !0: print nothing
                              !1: print first level subroutine information
   character(len=MAXCHARLEN), allocatable, dimension(:) :: sim_errors
@@ -19,7 +19,7 @@ module SimModule
   integer(I4B) :: inc_errors = 100
   integer(I4B) :: inc_warnings = 100
   integer(I4B) :: inc_notes = 100
-  
+
 
 contains
 
@@ -211,11 +211,11 @@ logical function print_errors()
     isize = count_errors()
     if (isize>0) then
       print_errors = .true.
-      write(iout,10)
+      if (iout > 0) write(iout,10)
       write(*,10)
       do i=1,isize
         call write_message(sim_errors(i))
-        call write_message(sim_errors(i),iout)
+        if (iout > 0) call write_message(sim_errors(i),iout)
       enddo
     endif
   endif
@@ -253,20 +253,30 @@ subroutine print_warnings()
   return
 end subroutine print_warnings
 
-subroutine print_notes()
+subroutine print_notes(numberlist)
   ! **************************************************************************
-  ! Print all note that have been stored
+  ! Print all notes that have been stored
   ! **************************************************************************
   !
   !    SPECIFICATIONS:
   ! --------------------------------------------------------------------------
   implicit none
+  ! -- dummy
+  logical, intent(in), optional :: numberlist
   ! -- local
   integer(I4B) :: i, isize
   character(len=MAXCHARLEN+10) :: noteplus
+  logical :: numlist
   ! -- formats
 10 format(/,'NOTES:')
 20 format(i0,'. ',a)
+30 format(a)
+  !
+  if (present(numberlist)) then
+    numlist = numberlist
+  else
+    numlist = .true.
+  endif
   !
   if (allocated(sim_notes)) then
     isize = count_notes()
@@ -274,7 +284,11 @@ subroutine print_notes()
       if (iout>0) write(iout,10)
       write(*,10)
       do i=1,isize
-        write(noteplus,20)i,trim(sim_notes(i))
+        if (numlist) then
+          write(noteplus,20)i,trim(sim_notes(i))
+        else
+          write(noteplus,30)trim(sim_notes(i))
+        endif
         call write_message(noteplus)
         if (iout>0) call write_message(noteplus,iout)
       enddo
@@ -451,7 +465,7 @@ subroutine ustop(stopmess,ioutlocal)
       write(*,fmt) stopmess
       write(iout,fmt) stopmess
       if (present(ioutlocal)) then
-        if (ioutlocal .ne. iout) then
+        if (ioutlocal > 0 .and. ioutlocal .ne. iout) then
           write(ioutlocal,fmt) trim(stopmess)
           close(ioutlocal)
         endif
@@ -461,9 +475,9 @@ subroutine ustop(stopmess,ioutlocal)
   !
   if (errorfound) then
     write(*,fmt) msg
-    write(iout,fmt) msg
+    if (iout > 0) write(iout,fmt) msg
     if (present(ioutlocal)) then
-      write(iout,fmt) msg
+      if (ioutlocal > 0 .and. ioutlocal /= iout) write(ioutlocal,fmt) msg
     endif
   endif
   !

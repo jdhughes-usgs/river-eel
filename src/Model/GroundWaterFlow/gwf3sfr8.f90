@@ -351,8 +351,8 @@ contains
     ! -- format
 ! ------------------------------------------------------------------------------
     !
-    ! -- initialize dimensions to -1
-    this%maxbound = -1
+    ! -- initialize dimensions to 0
+    this%maxbound = 0
     !
     ! -- get dimensions block
     call this%parser%GetBlock('DIMENSIONS', isFound, ierr, &
@@ -367,33 +367,33 @@ contains
         if (endOfBlock) exit
         call this%parser%GetStringCaps(keyword)
         select case (keyword)
-          case ('MAXBOUND')
+          case ('NREACHES')
             this%maxbound = this%parser%GetInteger()
-            write(this%iout,'(4x,a,i0)')'MAXBOUND = ', this%maxbound
+            write(this%iout,'(4x,a,i0)')'NREACHES = ', this%maxbound
           case default
             write(errmsg,'(4x,a,a)') &
               '****ERROR. UNKNOWN '//trim(this%text)//' DIMENSION: ', &
                                      trim(keyword)
             call store_error(errmsg)
-            call this%parser%StoreErrorUnit()
-            call ustop()
         end select
       end do
       write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' DIMENSIONS'
     else
       call store_error('ERROR.  REQUIRED DIMENSIONS BLOCK NOT FOUND.')
-      call this%parser%StoreErrorUnit()
-      call ustop()
     end if
     !
     ! -- verify dimensions were set
-    if(this%maxbound < 0) then
+    if(this%maxbound < 1) then
       write(errmsg, '(1x,a)') &
-        'ERROR.  MAXBOUND WAS NOT SPECIFIED OR WAS SPECIFIED INCORRECTLY.'
+        'ERROR.  NREACHES WAS NOT SPECIFIED OR WAS SPECIFIED INCORRECTLY.'
       call store_error(errmsg)
+    endif
+    !
+    ! -- write summary of error messages for block
+    if (count_errors() > 0) then
       call this%parser%StoreErrorUnit()
       call ustop()
-    endif
+    end if
     !
     ! -- Call define_listlabel to construct the list label that is written
     !    when PRINT_INPUT option is used.
@@ -531,7 +531,9 @@ contains
     character (len=10) :: cval
     character(len=LENBOUNDNAME) :: bndName, bndNameTemp, manningname
     character(len=50), dimension(:), allocatable :: caux
-    integer(I4B) :: n, ierr, ival
+    integer(I4B) :: j, n, ierr, ival
+    integer(I4B) :: ipos
+    integer(I4B) :: ndiv
     logical :: isfound, endOfBlock
     integer(I4B) :: i
     integer(I4B) :: jj
@@ -539,6 +541,8 @@ contains
     integer(I4B) :: nja
     integer(I4B), dimension(:), pointer, contiguous :: rowmaxnnz => null()
     integer(I4B) :: idiv
+    integer, allocatable, dimension(:) :: iachk
+    integer, allocatable, dimension(:) :: nboundchk
     ! -- format
   ! ------------------------------------------------------------------------------
     !
@@ -552,6 +556,13 @@ contains
     ! -- allocate space for sfr reach data
     allocate(this%reaches(this%maxbound))
     allocate(rowmaxnnz(this%maxbound))
+    do i = 1, this%maxbound
+      rowmaxnnz(i) = 0
+    enddo 
+    allocate(nboundchk(this%maxbound))
+    do i = 1, this%maxbound
+      nboundchk(i) = 0
+    enddo 
     !
     ! -- allocate local storage for aux variables
     if (this%naux > 0) then
@@ -572,6 +583,17 @@ contains
         if (endOfBlock) exit
         ! -- read reach number
         n = this%parser%GetInteger()
+
+        if (n < 1 .or. n > this%maxbound) then
+          write(errmsg,'(4x,a,1x,i6)') &
+            '****ERROR. REACH NUMBER (rno) MUST BE > 0 and <= ', this%maxbound
+          call store_error(errmsg)
+          cycle
+        end if
+
+        ! -- increment nboundchk
+        nboundchk(n) = nboundchk(n) + 1
+
         ! -- allocate data for this reach
         call this%allocate_reach(n)
         ! -- set reach number
@@ -590,8 +612,6 @@ contains
             errmsg = 'ERROR: cellid (' // trim(cellid) //                    &
                      ') for unconnected reach ' //  trim(cnum) // ' must be NONE'
             call store_error(errmsg)
-            call this%parser%StoreErrorUnit()
-            call ustop()
           end if
         end if
         ! -- get reach length
@@ -691,13 +711,25 @@ contains
       write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' PACKAGEDATA'
     else
       call store_error('ERROR.  REQUIRED PACKAGEDATA BLOCK NOT FOUND.')
-      call this%parser%StoreErrorUnit()
-      call ustop()
     end if
     !
+    ! -- Check to make sure that every reach is specified and that no reach
+    !    is specified more than once.
+    do i = 1, this%maxbound
+      if (nboundchk(i) == 0) then
+        write(errmsg, '(a, i0, a)') 'ERROR: INFORMATION FOR REACH ', i,        &
+                                    ' NOT SPECIFIED IN PACKAGEDATA BLOCK.'
+        call store_error(errmsg)
+      else if (nboundchk(i) > 1) then
+        write(errmsg, '(a, i0, i0)') 'ERROR: INFORMATION SPECIFIED ',          &
+                                     nboundchk(i), ' TIMES FOR REACH ', i
+        call store_error(errmsg)
+      endif
+    end do
+    deallocate(nboundchk)
+    !
     ! -- terminate if errors encountered in reach block
-    ierr = count_errors()
-    if (ierr > 0) then
+    if (count_errors() > 0) then
       call this%parser%StoreErrorUnit()
       call ustop()
     end if
@@ -707,10 +739,17 @@ contains
       deallocate(caux)
     end if
     !
+    ! -- allocate and initialize local variables for reach connections
+    allocate(nboundchk(this%maxbound))
+    do n = 1, this%maxbound
+      nboundchk(n) = 0
+    end do
+    !
     ! -- allocate space for connectivity
     allocate(this%sparse)
     !
     ! -- set up sparse
+    
     call this%sparse%init(this%maxbound, this%maxbound, rowmaxnnz)
     !
     ! -- read connection data
@@ -729,12 +768,16 @@ contains
         n = this%parser%GetInteger()
         !
         ! -- check for error
-        if(n < 0 .or. n > this%maxbound) then
-          write(errmsg, '(a, i0)') 'SFR REACH LESS THAN ZERO OR > MAXBOUND: ', n
+        if(n < 1 .or. n > this%maxbound) then
+          write(errmsg, '(a, i0)') 'SFR REACH LESS THAN ONE OR > NREACHES: ', n
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
+          cycle
         endif
+        !
+        ! -- increment nboundchk
+        if (this%reaches(n)%nconn > 0) then
+          nboundchk(n) = nboundchk(n) + 1
+        end if
         !
         ! -- add diagonal connection for reach
         call this%sparse%addconnection(n, n, 1)
@@ -748,25 +791,47 @@ contains
           elseif (ival == 0) then
             call store_error('Missing or zero connection reach in line:')
             call store_error(line)
-            call this%parser%StoreErrorUnit()
-            call ustop()
           else
             this%reaches(n)%idir(i) = 1
           end if
           if (ival > this%maxbound) then
-            call store_error('Reach number exceeds MAXBOUND in line:')
+            call store_error('Reach number exceeds NREACHES in line:')
             call store_error(line)
-            call this%parser%StoreErrorUnit()
-            call ustop()
           endif
           this%reaches(n)%iconn(i) = ival
           this%reaches(n)%idiv(i) = 0
           call this%sparse%addconnection(n, ival, 1)
         end do
       end do
+      
       write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' CONNECTIONDATA'
+      
+      do n = 1, this%maxbound
+        if (this%reaches(n)%nconn > 0) then
+          !
+          ! -- check for missing or duplicate lake connections
+          if (nboundchk(n) == 0) then
+            write(errmsg,'(a,1x,i0)')                                             &
+              'ERROR.  NO CONNECTION DATA SPECIFIED FOR REACH', n
+            call store_error(errmsg)
+          else if (nboundchk(n) > 1) then
+            write(errmsg,'(a,1x,i0,1x,a,1x,i0,1x,a)')                             &
+              'ERROR.  CONNECTION DATA FOR REACH', n,                             &
+              'SPECIFIED', nboundchk(n), 'TIMES'
+            call store_error(errmsg)
+          end if
+        end if
+      end do
+      
     else
       call store_error('ERROR.  REQUIRED CONNECTIONDATA BLOCK NOT FOUND.')
+    end if
+    !
+    ! -- deallocate local storage for reach connections
+    deallocate(nboundchk)
+    !
+    ! -- terminate if errors encountered in connectiondata block
+    if (count_errors() > 0) then
       call this%parser%StoreErrorUnit()
       call ustop()
     end if
@@ -784,6 +849,21 @@ contains
     ! -- destroy sparse
     call this%sparse%destroy()
     deallocate(this%sparse)
+    !
+    ! -- allocate and initialize local variables for diversions
+    ndiv = 0
+    do n = 1, this%maxbound
+      ndiv = ndiv + this%reaches(n)%ndiv
+    end do
+    allocate(iachk(this%maxbound+1))
+    allocate(nboundchk(ndiv))
+    iachk(1) = 1
+    do n = 1, this%maxbound
+      iachk(n+1) = iachk(n) + this%reaches(n)%ndiv
+    end do
+    do n = 1, ndiv
+      nboundchk(n) = 0
+    end do
     !
     ! -- read diversions
     if (this%idiversions /= 0) then
@@ -824,10 +904,13 @@ contains
             write (cnum, '(i0)') this%reaches(n)%ndiv
             errmsg = trim(errmsg) // ' diversion number should be between 1 and ' // trim(cnum) // '.'
             call store_error(errmsg)
-            call this%parser%StoreErrorUnit()
-            call ustop()
             cycle
           end if
+          
+          ! -- increment nboundchk
+          ipos = iachk(n) + ival - 1
+          nboundchk(ipos) = nboundchk(ipos) + 1
+          
           idiv = ival
           !
           ! -- get target reach for diversion
@@ -842,6 +925,7 @@ contains
           !
           ! -- get cprior
           call this%parser%GetStringCaps(cval)
+          ival = -1
           select case (cval)
             case('UPTO')
               ival = 0
@@ -853,24 +937,42 @@ contains
               ival = -3
             case default
               errmsg = 'ERROR: INVALID CPRIOR TYPE ' // trim(cval)
-              call this%parser%StoreErrorUnit()
-              call ustop()
+              call store_error(errmsg)
           end select
           this%reaches(n)%diversion(idiv)%cprior = cval
-          !ival =  this%parser%GetInteger()
           this%reaches(n)%diversion(idiv)%iprior = ival
 
         end do
+        
         write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' DIVERSIONS'
-        !
-        ! -- write summary of diversion error messages
-        ierr = count_errors()
-        if (ierr>0) then
-          call this%parser%StoreErrorUnit()
-          call ustop()
-        end if
+        
+        do n = 1, this%maxbound
+          do j = 1, this%reaches(n)%ndiv
+            ipos = iachk(n) + j - 1
+            !
+            ! -- check for missing or duplicate reach diversions
+            if (nboundchk(ipos) == 0) then
+              write(errmsg,'(a,1x,i0,1x,a,1x,i0)')                              &
+                'ERROR.  NO DATA SPECIFIED FOR REACH', n, 'DIVERSION', j
+              call store_error(errmsg)
+            else if (nboundchk(ipos) > 1) then
+              write(errmsg,'(a,1x,i0,1x,a,1x,i0,1x,a,1x,i0,1x,a)')              &
+                'ERROR.  DATA FOR REACH', n, 'DIVERSION', j,                    &
+                'SPECIFIED', nboundchk(ipos), 'TIMES'
+              call store_error(errmsg)
+            end if
+          end do
+        end do
       else
         call store_error('ERROR.  REQUIRED DIVERSIONS BLOCK NOT FOUND.')
+      end if
+      !
+      ! -- deallocate local variables
+      deallocate(iachk)
+      deallocate(nboundchk)
+      !
+      ! -- write summary of package block error messages
+      if (count_errors() > 0) then
         call this%parser%StoreErrorUnit()
         call ustop()
       end if
@@ -1045,10 +1147,9 @@ contains
         n = this%parser%GetInteger()
         if (n < 1 .or. n > this%maxbound) then
           write(errmsg,'(4x,a,1x,i6)') &
-            '****ERROR. ISFR MUST BE > 0 and <= ', this%maxbound
+            '****ERROR. RNO MUST BE > 0 and <= ', this%maxbound
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
+          cycle
         end if
         ! -- read data from the rest of the line
         call this%parser%GetRemainingLine(line)
@@ -1068,6 +1169,12 @@ contains
     else
       write(this%iout,fmtlsp) trim(this%filtyp)
     endif
+    !
+    ! -- write summary of package block error messages
+    if (count_errors() > 0) then
+      call this%parser%StoreErrorUnit()
+      call ustop()
+    end if
     !
     ! -- return
     return
@@ -2325,12 +2432,16 @@ contains
             case default
               msg = 'Error: Unrecognized observation type: ' // trim(obsrv%ObsTypeId)
               call store_error(msg)
-              call this%parser%StoreErrorUnit()
-              call ustop()
           end select
           call this%obs%SaveOneSimval(obsrv, v)
         end do
       end do
+    end if
+    !
+    ! -- write summary of package block error messages
+    if (count_errors() > 0) then
+      call this%parser%StoreErrorUnit()
+      call ustop()
     end if
     !
     return

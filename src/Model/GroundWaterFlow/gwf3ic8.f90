@@ -4,7 +4,7 @@ module GwfIcModule
   use NumericalPackageModule, only: NumericalPackageType
   use BlockParserModule,      only: BlockParserType
   use BaseDisModule,          only: DisBaseType
-  
+
   implicit none
   private
   public :: GwfIcType
@@ -86,7 +86,7 @@ module GwfIcModule
     !
     ! -- Read options
     call this%read_options()
-    !  
+    !
     ! -- Read data
     call this%read_data()
     !
@@ -166,7 +166,8 @@ module GwfIcModule
 ! ------------------------------------------------------------------------------
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr, supportOpenClose=.true.)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, &
+                              supportOpenClose=.true., blockRequired=.false.)
     !
     ! -- parse options block if detected
     if (isfound) then
@@ -190,7 +191,7 @@ module GwfIcModule
     ! -- Return
     return
     end subroutine read_options
-    
+
   subroutine read_data(this)
 ! ******************************************************************************
 ! read_data

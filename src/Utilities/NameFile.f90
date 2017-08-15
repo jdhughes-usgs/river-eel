@@ -1,14 +1,15 @@
 module NameFileModule
-  
+
   use KindModule, only: DP, I4B
-  use InputOutputModule,   only: ParseLine, openfile, block_to_chararray
+  use InputOutputModule,   only: ParseLine, openfile, getunit
   use ConstantsModule,     only: LINELENGTH, LENPACKAGENAME
-  use ArrayHandlersModule, only: remove_character
+  use ArrayHandlersModule, only: ExpandArray, remove_character
   use IunitModule,         only: IunitType
+  use BlockParserModule,   only: BlockParserType
   implicit none
   private
   public :: NameFileType
-  
+
   type :: NameFileType
     character(len=LINELENGTH) :: filename
     logical :: opened_listfile = .false.
@@ -16,6 +17,7 @@ module NameFileModule
     character(len=LINELENGTH), dimension(:), allocatable :: input_files
     character(len=LINELENGTH), dimension(:), allocatable :: output_files
     type(IunitType) :: iunit_obj
+    type(BlockParserType) :: parser
   contains
     procedure :: init                  => namefile_init
     procedure :: add_cunit             => namefile_add_cunit
@@ -28,9 +30,9 @@ module NameFileModule
     procedure :: get_output_filename
     procedure :: get_input_filename
   end type NameFileType
-  
+
   contains
-  
+
   subroutine namefile_init(this, filename, iout)
 ! ******************************************************************************
 ! namefile_init -- initialize the namefile object using the filename.  if iout
@@ -46,28 +48,48 @@ module NameFileModule
     character(len=*), intent(in) :: filename
     integer(I4B), intent(in) :: iout
     ! -- local
-    character(len=LINELENGTH) :: errmsg
-    integer(I4B) :: i, ierr
+    character(len=LINELENGTH) :: errmsg, line
+    integer(I4B) :: i, ierr, inunit, n
+    logical :: isFound, endOfBlock
     ! -- formats
     character(len=*), parameter :: fmtfname =                                  &
       "(1x, 'NON-COMMENTED ENTRIES FOUND IN ', /,                              &
-        4X, 'BLOCK: ', a, /,                                                   &
-        4X, 'FILE: ', a)"
+       &4X, 'BLOCK: ', a, /,                                                   &
+       &4X, 'FILE: ', a)"
     character(len=*), parameter :: fmtbeg = "(/, 1x, A)"
     character(len=*), parameter :: fmtline = "(2x, a)"
     character(len=*), parameter :: fmtend = "(1x, A, /)"
 ! ------------------------------------------------------------------------------
     !
-    ! -- Store filename
+    ! -- Store filename and initialize variables
     this%filename = filename
+    allocate(this%opts(0))
+    allocate(this%input_files(0))
+    allocate(this%output_files(0))
+    !
+    ! -- Open the name file and initialize the block parser
+    inunit = getunit()
+    call openfile(inunit, iout, filename, 'NAM', filstat_opt='OLD')
+    call this%parser%Initialize(inunit, iout)
     !
     ! -- Read and set the options
-    call block_to_chararray(filename, 'OPTIONS', this%opts, ierr)
-    if(ierr == 0) then
+    call this%parser%GetBlock('OPTIONS', isFound, ierr, blockRequired=.false.)
+    if(isFound) then
+      ! Populate this%opts
+      n = 0
+      getopts: do
+        call this%parser%GetNextLine(endOfBlock)
+        if (endOfBlock) exit getopts
+        call this%parser%GetCurrentLine(line)
+        call ExpandArray(this%opts)
+        n = n + 1
+        this%opts(n) = adjustl(line)
+      enddo getopts
+      !
       if(iout > 0) then
         write(iout, fmtfname) 'OPTIONS', trim(adjustl(filename))
         write(iout, fmtbeg) 'BEGIN OPTIONS'
-        do i = 1, size(this%opts)
+        do i=1,n
           write(iout, fmtline) trim(adjustl(this%opts(i)))
         enddo
         write(iout, fmtend) 'END OPTIONS'
@@ -79,12 +101,23 @@ module NameFileModule
     endif
     !
     ! -- Read and set the input_files
-    call block_to_chararray(filename, 'PACKAGES', this%input_files, ierr)
-    if(ierr == 0) then
+    call this%parser%GetBlock('PACKAGES', isFound, ierr)
+    if(isFound) then
+      ! Populate this%input_files
+      n = 0
+      getpaks: do
+        call this%parser%GetNextLine(endOfBlock)
+        if (endOfBlock) exit getpaks
+        call this%parser%GetCurrentLine(line)
+        call ExpandArray(this%input_files)
+        n = n + 1
+        this%input_files(n) = adjustl(line)
+      enddo getpaks
+      !
       if(iout > 0) then
         write(iout, fmtfname) 'PACKAGES', trim(adjustl(filename))
         write(iout, fmtbeg) 'BEGIN PACKAGES'
-        do i = 1, size(this%input_files)
+        do i=1,n
           write(iout, fmtline) trim(adjustl(this%input_files(i)))
         enddo
         write(iout, fmtend) 'END PACKAGES'
@@ -99,10 +132,10 @@ module NameFileModule
     ! -- return
     return
   end subroutine namefile_init
-  
+
   subroutine namefile_add_cunit(this, niunit, cunit)
 ! ******************************************************************************
-! namefile_add_cunit -- attach the cunit array to the iunit object 
+! namefile_add_cunit -- attach the cunit array to the iunit object
 ! ******************************************************************************
 !
 !    SPECIFICATIONS:
@@ -118,10 +151,10 @@ module NameFileModule
     ! -- return
     return
   end subroutine namefile_add_cunit
-  
+
   subroutine get_input_filename(this, ftype, fname, found)
 ! ******************************************************************************
-! get_input_filename -- get the filename from namefilearray for the specified 
+! get_input_filename -- get the filename from namefilearray for the specified
 !   ftype.
 ! ******************************************************************************
 !
@@ -157,10 +190,10 @@ module NameFileModule
     ! -- return
     return
   end subroutine get_input_filename
-  
+
   subroutine get_output_filename(this, ftype, fname, found)
 ! ******************************************************************************
-! get_output_filename -- get the filename from namefilearray for the specified 
+! get_output_filename -- get the filename from namefilearray for the specified
 !   ftype.
 ! ******************************************************************************
 !
@@ -195,8 +228,8 @@ module NameFileModule
     !
     ! -- return
     return
-  end subroutine get_output_filename  
-  
+  end subroutine get_output_filename
+
   subroutine namefile_openlistfile(this, iout)
 ! ******************************************************************************
 ! namefile_openlistfile -- Open the list file and set iout.
@@ -266,7 +299,7 @@ module NameFileModule
     ! -- return
     return
   end subroutine namefile_openlistfile
-  
+
   subroutine namefile_openfiles(this, iout)
 ! ******************************************************************************
 ! namefile_openfiles -- Open the files.
@@ -319,7 +352,7 @@ module NameFileModule
     ! -- return
     return
   end subroutine namefile_openfiles
-  
+
   subroutine namefile_get_unitnumber(this, ftype, inunit, iremove)
 ! ******************************************************************************
 ! namefile_get_unitnumber -- Assign the unit number for the ftype to inunit.
@@ -339,7 +372,7 @@ module NameFileModule
     ! -- return
     return
   end subroutine namefile_get_unitnumber
-  
+
   function namefile_get_nval_for_row(this, irow) result(nval)
 ! ******************************************************************************
 ! namefile_get_nval_for_row -- Get the number of entries for the cunit type in
@@ -360,12 +393,12 @@ module NameFileModule
     ! -- return
     return
   end function namefile_get_nval_for_row
-  
+
   function namefile_get_unitnumber_rowcol(this, irow, jcol)            &
           result(iu)
 ! ******************************************************************************
 ! namefile_get_unitnumber_rowcol -- Get the unit number for entries in
-!   cunit(irow) and columns (icol).  For example, return the unit number for 
+!   cunit(irow) and columns (icol).  For example, return the unit number for
 !   the first, second, or third well package.
 ! ******************************************************************************
 !
@@ -430,6 +463,6 @@ module NameFileModule
     ! -- return
     return
   end subroutine namefile_get_pakname
-  
-  
+
+
 end module NameFileModule

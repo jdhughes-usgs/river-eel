@@ -29,9 +29,9 @@ module OutputControlModule
     procedure :: oc_print
     procedure :: oc_save_unit
   end type OutputControlType
-  
+
   contains
-  
+
   subroutine oc_cr(ocobj, name_model, inunit, iout)
 ! ******************************************************************************
 ! oc_cr -- Create a new oc object
@@ -179,13 +179,13 @@ module OutputControlModule
         if (endOfBlock) exit
         call this%parser%GetStringCaps(keyword1)
         !
-        ! -- Set printsave string and then read the record type (e.g.         
+        ! -- Set printsave string and then read the record type (e.g.
         !    BUDGET, HEAD)
         printsave = keyword1
         call this%parser%GetStringCaps(keyword2)
         !
-        ! -- Look through the output control data objects that are 
-        !    available and set ocdobjptr to the correct one based on 
+        ! -- Look through the output control data objects that are
+        !    available and set ocdobjptr to the correct one based on
         !    cname.  Set found to .false. if not a valid record type.
         found = .false.
         do ipos = 1, size(this%ocdobj)
@@ -283,7 +283,7 @@ module OutputControlModule
     ! -- return
     return
   end subroutine oc_da
-  
+
   subroutine allocate_scalars(this, name_model)
 ! ******************************************************************************
 ! allocate_scalars -- Allocate scalars
@@ -337,7 +337,7 @@ module OutputControlModule
 ! ------------------------------------------------------------------------------
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, blockRequired=.false.)
     !
     ! -- parse options block if detected
     if (isfound) then
@@ -369,7 +369,7 @@ module OutputControlModule
     !
     ! -- return
     return
-  end subroutine read_options  
+  end subroutine read_options
 
   logical function oc_save(this, cname)
 ! ******************************************************************************

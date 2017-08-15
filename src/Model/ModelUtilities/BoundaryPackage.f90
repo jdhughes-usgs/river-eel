@@ -20,6 +20,7 @@ module BndModule
   use ListModule,                   only: ListType
   use PackageMoverModule,           only: PackageMoverType
   use BaseDisModule,                only: DisBaseType
+  use BlockParserModule,            only: BlockParserType
 
   implicit none
 
@@ -1118,7 +1119,7 @@ module BndModule
     integer(I4B) :: i, indx, inobs, isize, j
     logical :: isfound, endOfBlock
     logical :: foundchildclassoption
-    type(TimeSeriesGroupType), pointer :: tsGroup => null()
+    class(TimeSeriesGroupType), pointer :: tsGroup => null()
     ! -- format
     character(len=*),parameter :: fmtflow = &
       "(4x, 'FLOWS WILL BE SAVED TO FILE: ', a, /4x, 'OPENED ON UNIT: ', I7)"
@@ -1135,7 +1136,8 @@ module BndModule
     ! -- set default options
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr, supportOpenClose=.true.)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, &
+                              supportOpenClose=.true., blockRequired=.false.)
     !
     ! -- parse options block if detected
     if (isfound) then

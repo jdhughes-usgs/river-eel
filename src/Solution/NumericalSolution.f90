@@ -26,7 +26,7 @@ module NumericalSolutionModule
   implicit none
   private
   public :: solution_create
-  
+
   type, extends(BaseSolutionType) :: NumericalSolutionType
     character(len=LINELENGTH)                            :: fname
     type(ListType)                                       :: modellist
@@ -61,7 +61,7 @@ module NumericalSolutionModule
     real(DP), pointer                                    :: relaxold => NULL()
     real(DP), pointer                                    :: res_prev => NULL()
     real(DP), pointer                                    :: res_new => NULL()
-    real(DP), pointer                                    :: res_in  => NULL()       
+    real(DP), pointer                                    :: res_in  => NULL()
     integer(I4B), pointer                                :: ibcount => NULL()
     integer(I4B), pointer                                :: icnvg => NULL()
     integer(I4B), pointer                                :: mxiter => NULL()
@@ -69,13 +69,13 @@ module NumericalSolutionModule
     integer(I4B), pointer                                :: nonmeth => NULL()
     integer(I4B), pointer                                :: numtrack => NULL()
     integer(I4B), pointer                                :: iprims => NULL()
-    integer(I4B), pointer                                :: ibflag => NULL()     
+    integer(I4B), pointer                                :: ibflag => NULL()
     integer(I4B), dimension(:,:), pointer                :: lrch => NULL()
     real(DP), dimension(:), pointer                      :: hncg => NULL()
     real(DP), dimension(:), pointer                      :: deold => NULL()
     real(DP), dimension(:), pointer                      :: wsave => NULL()
     real(DP), dimension(:), pointer                      :: hchold => NULL()
-    ! summary 
+    ! summary
     character(len=31), pointer, dimension(:)             :: caccel => NULL()
     integer(I4B), pointer                                :: icsvout => NULL()
     integer(I4B), pointer                                :: nitermax => NULL()
@@ -95,7 +95,7 @@ module NumericalSolutionModule
     integer(I4B), pointer                                :: iallowptc => NULL()
     integer(I4B), pointer                                :: iptcopt => NULL()
     integer(I4B), pointer                                :: iptcout => NULL()
-    real(DP), pointer                                    :: l2norm0 => NULL()   
+    real(DP), pointer                                    :: l2norm0 => NULL()
     real(DP), pointer                                    :: ptcfact => NULL()
     real(DP), pointer                                    :: ptcdel => NULL()
     real(DP), pointer                                    :: ptcdel0 => NULL()
@@ -108,7 +108,7 @@ module NumericalSolutionModule
     !
     ! sparse object
     type(sparsematrix)                                   :: sparse
-    
+
   contains
     procedure :: sln_df
     procedure :: sln_ar
@@ -121,7 +121,7 @@ module NumericalSolutionModule
     procedure :: addexchange
     procedure :: slnassignexchanges
     procedure :: save
-    
+
     procedure, private :: sln_connect
     procedure, private :: sln_reset
     procedure, private :: sln_ls
@@ -137,7 +137,7 @@ module NumericalSolutionModule
     procedure, private :: allocate_arrays
     procedure, private :: convergence_summary
     procedure, private :: csv_convergence_summary
-    
+
   end type NumericalSolutionType
 
 contains
@@ -179,7 +179,7 @@ contains
     !    Check to see if the file is already opened, which can happen when
     !    running in single model mode
     inquire(file=filename, number=inunit)
-    
+
     if(inunit < 0) inunit = getunit()
     solution%iu = inunit
     write(iout,'(/a,a)') ' Creating solution: ', solution%name
@@ -272,7 +272,7 @@ contains
     this%ibcount = 0
     this%icnvg = 0
     this%mxiter = 0
-    this%linmeth = 1 
+    this%linmeth = 1
     this%nonmeth = 0
     this%iprims = 0
     this%theta = DZERO
@@ -469,7 +469,7 @@ contains
     mxvl = 0
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, blockRequired=.false.)
     !
     ! -- parse options block if detected
     if (isfound) then
@@ -514,7 +514,7 @@ contains
           if (keyword == 'FILEOUT') then
             call this%parser%GetString(fname)
             this%icsvout = getunit()
-            call openfile(this%icsvout, iout, fname, 'CSV_OUTPUT',  & 
+            call openfile(this%icsvout, iout, fname, 'CSV_OUTPUT',  &
                           filstat_opt='REPLACE')
             write(iout,fmtcsvout) trim(fname), this%icsvout
           else
@@ -523,18 +523,18 @@ contains
             call store_error(errmsg)
           end if
         !
-        ! -- right now these are options that are only available in the 
+        ! -- right now these are options that are only available in the
         !    development version and are not included in the documentation.
-        !    These options are only available when IDEVELOPMODE in 
+        !    These options are only available when IDEVELOPMODE in
         !    constants module is set to 1
         case ('PTC')
           call this%parser%DevOpt()
           this%iallowptc = 1
-          write(IOUT,'(1x,A)') 'PSEUDO-TRANSIENT CONTINUATION ENABLED' 
+          write(IOUT,'(1x,A)') 'PSEUDO-TRANSIENT CONTINUATION ENABLED'
         case ('NO_PTC')
           call this%parser%DevOpt()
           this%iallowptc = 0
-          write(IOUT,'(1x,A)') 'PSEUDO-TRANSIENT CONTINUATION DISABLED' 
+          write(IOUT,'(1x,A)') 'PSEUDO-TRANSIENT CONTINUATION DISABLED'
         case('PTC_OUTPUT')
           call this%parser%DevOpt()
           this%iallowptc = 1
@@ -542,7 +542,7 @@ contains
           if (keyword == 'FILEOUT') then
             call this%parser%GetString(fname)
             this%iptcout = getunit()
-            call openfile(this%iptcout, iout, fname, 'PTC-OUT',                & 
+            call openfile(this%iptcout, iout, fname, 'PTC-OUT',                &
                           filstat_opt='REPLACE')
             write(iout,fmtptcout) trim(fname), this%iptcout
           else
@@ -556,7 +556,7 @@ contains
           this%iptcopt = 1
           write(IOUT,'(1x,A)')                                                 &
             'PSEUDO-TRANSIENT CONTINUATION USES BNORM AND L2NORM TO ' //       &
-            'SET INITIAL VALUE'  
+            'SET INITIAL VALUE'
         case ('PTC_EXPONENT')
           call this%parser%DevOpt()
           rval = this%parser%GetDouble()
@@ -567,7 +567,7 @@ contains
             this%iallowptc = 1
             this%ptcexp = rval
             write(IOUT,'(1x,A,1x,g15.7)')                                      &
-              'PSEUDO-TRANSIENT CONTINUATION EXPONENT', this%ptcexp  
+              'PSEUDO-TRANSIENT CONTINUATION EXPONENT', this%ptcexp
           end if
         case ('PTC_THRESHOLD')
           call this%parser%DevOpt()
@@ -579,7 +579,7 @@ contains
             this%iallowptc = 1
             this%ptcthresh = rval
             write(IOUT,'(1x,A,1x,g15.7)')                                      &
-              'PSEUDO-TRANSIENT CONTINUATION THRESHOLD', this%ptcthresh 
+              'PSEUDO-TRANSIENT CONTINUATION THRESHOLD', this%ptcthresh
           end if
         case ('PTC_DEL0')
           call this%parser%DevOpt()
@@ -591,7 +591,7 @@ contains
             this%iallowptc = 1
             this%ptcdel0 = rval
             write(IOUT,'(1x,A,1x,g15.7)')                                      &
-              'PSEUDO-TRANSIENT CONTINUATION INITIAL TIMESTEP', this%ptcdel0  
+              'PSEUDO-TRANSIENT CONTINUATION INITIAL TIMESTEP', this%ptcdel0
           end if
         case default
           write(errmsg,'(4x,a,a)') 'IMS sln_ar: UNKNOWN IMS OPTION: ',         &
@@ -703,7 +703,7 @@ contains
     !
 9002 FORMAT(1X,'OUTER ITERATION CONVERGENCE CRITERION     (HCLOSE) = ', E15.6, &
     &      /1X,'MAXIMUM NUMBER OF OUTER ITERATIONS        (MXITER) = ', I9,    &
-    &      /1X,'SOLVER PRINTOUT INDEX                     (IPRIMS) = ',I9,     & 
+    &      /1X,'SOLVER PRINTOUT INDEX                     (IPRIMS) = ',I9,     &
     &      /1X,'NONLINEAR ITERATION METHOD            (NONLINMETH) = ',I9,     &
     &      /1X,'LINEAR SOLUTION METHOD                   (LINMETH) = ',I9)
     !
@@ -762,7 +762,7 @@ contains
     END IF
 
     !
-    ! -- If CG, then go through each model and each exchange and check 
+    ! -- If CG, then go through each model and each exchange and check
     !    for asymmetry
     if (isymflg == 1) then
       !
@@ -784,8 +784,8 @@ contains
         endif
       enddo
       !
-    endif    
-    
+    endif
+
     ! -- write summary of solver error messages
     ierr = count_errors()
     if (ierr>0) then
@@ -797,12 +797,12 @@ contains
     if (this%iallowptc > 0) then
       WRITE(IOUT,*) '***PSEUDO-TRANSIENT CONTINUATION WILL BE USED***'
     end if
-    
+
     !
     ! reallocate space for nonlinear arrays and initialize
     call mem_reallocate(this%hncg, this%mxiter, 'HNCG', this%name)
     call mem_reallocate(this%lrch, 3, this%mxiter, 'LRCH', this%name)
-    
+
     ! delta-bar-delta under-relaxation
     if(iabs(this%nonmeth).eq.3)then
       call mem_reallocate(this%wsave, this%neq, 'WSAVE', this%name)
@@ -816,16 +816,16 @@ contains
     endif
     this%hncg = DZERO
     this%lrch = 0
-    
+
     ! allocate space for saving solver convergence history
     if (this%iprims == 2) then
       this%nitermax = this%nitermax * this%mxiter
     else
       this%nitermax = 1
     end if
-    
+
     allocate(this%caccel(this%nitermax))
-    
+
     im = this%convnmod
     call mem_reallocate(this%itinner, this%nitermax, 'ITINNER',                &
                         trim(this%name))
@@ -911,7 +911,7 @@ contains
         'Solution', trim(adjustl(this%name)), 'summary'
       write(this%imslinear%iout, "(1x,70('-'))")
       write(this%imslinear%iout, '(1x,a,1x,g0,1x,a)')                          &
-        'Total formulate time: ', this%ttform, 'seconds' 
+        'Total formulate time: ', this%ttform, 'seconds'
       write(this%imslinear%iout, '(1x,a,1x,g0,1x,a,/)')                        &
         'Total solution time:  ', this%ttsoln, 'seconds'
     end if
@@ -1218,7 +1218,7 @@ contains
         call code_timer(0, ttsoln, this%ttsoln)
         CALL this%sln_ls(kiter,kstp,kper,iter,itertot,iptc,ptcf)
         call code_timer(1, ttsoln, this%ttsoln)
-        !        
+        !
         !-------------------------------------------------------
         itestmat = 0
         if(itestmat.eq.1)then
@@ -1229,14 +1229,14 @@ contains
         close(99)
         stop
         endif
-        !-------------------------------------------------------        
+        !-------------------------------------------------------
         ! -- check convergence of solution
         call this%sln_outer_check(this%hncg(kiter), this%lrch(1,kiter))
         this%icnvg = 0
         if (abs(this%hncg(kiter)) <= this%hclose) this%icnvg = 1
         !
-        ! -- Additional convergence check for pseudo-transient continuation 
-        !    term. Evaluate if the ptc value added to the diagonal has 
+        ! -- Additional convergence check for pseudo-transient continuation
+        !    term. Evaluate if the ptc value added to the diagonal has
         !    decayed sufficiently.
         !if (this%iptc /= 0) then
         if (iptc > 0) then
@@ -1268,7 +1268,7 @@ contains
           enddo
         end if
         !
-        ! -- dampening 
+        ! -- dampening
         if (this%icnvg /= 1) then ! .and. abs(this%nonmeth) > 0) then
           if (abs(this%nonmeth) > 0) then
             call this%sln_underrelax(kiter, this%hncg(kiter), this%neq,        &
@@ -1302,8 +1302,8 @@ contains
            WRITE(IOUT,23) kiter, iter, this%hncg(kiter), adjustr(trim(strh))
           end if
         end if
-22    FORMAT(1X,I10,I10,53X,1PG15.6,A34) 
-23    FORMAT(1X,I10,I10,1X,1PG15.6,A34) 
+22    FORMAT(1X,I10,I10,53X,1PG15.6,A34)
+23    FORMAT(1X,I10,I10,1X,1PG15.6,A34)
         !
         ! -- Write a message if convergence was not achieved
         if (kiter == this%mxiter) then
@@ -1344,7 +1344,7 @@ contains
           ! -- determine the total number of iterations at the end of this outer
           this%nitercnt = this%nitercnt + itertot
           !
-          ! -- get model number and user node number 
+          ! -- get model number and user node number
           call this%sln_get_nodeu(this%lrch(1,kiter), im, nodeu)
           !
           ! -- write line
@@ -1366,7 +1366,7 @@ contains
         call mp%model_bd(this%icnvg, isuppress_output)
       enddo
       !
-      ! -- Budget for each implicit exchange in this solution   
+      ! -- Budget for each implicit exchange in this solution
       do ic = 1, this%exchangelist%Count()
         cp => GetNumericalExchangeFromList(this%exchangelist, ic)
         call cp%exg_bd(isgcnvg, isuppress_output, this%id)
@@ -1388,7 +1388,7 @@ contains
     ! -- return
     return
   end subroutine sln_ca
-  
+
   subroutine convergence_summary(this, iu, im, itertot)
 ! ******************************************************************************
 ! convergence_summary -- Save convergence summary to a File
@@ -1467,7 +1467,7 @@ contains
     return
   end subroutine convergence_summary
 
-  
+
   subroutine csv_convergence_summary(this, iu, totim, kper, kstp, isubtime,    &
                                      itertot)
 ! ******************************************************************************
@@ -1661,8 +1661,8 @@ contains
     integer(I4B) :: ic
 ! ------------------------------------------------------------------------------
     !
-    ! -- Go through the list of exchange objects and if either model1 or model2 
-    !    are part of this solution, then include the exchange object as part of 
+    ! -- Go through the list of exchange objects and if either model1 or model2
+    !    are part of this solution, then include the exchange object as part of
     !    this solution.
     do ic=1,baseexchangelist%Count()
       cb => GetBaseExchangeFromList(baseexchangelist, ic)
@@ -1833,7 +1833,7 @@ contains
                            this%amat, this%rhs, this%x, l2norm)
       if (kiter == 1) then
         if (this%iptcout > 0) then
-          write(this%iptcout, '(A10,6(1x,A15),2(1x,A15))') 'OUTER ITER',       &         
+          write(this%iptcout, '(A10,6(1x,A15),2(1x,A15))') 'OUTER ITER',       &
             '         PTCDEL', '        L2NORM0', '         L2NORM',           &
             '        RHSNORM', '       1/PTCDEL', '  DIAGONAL MIN.',           &
             ' RHSNORM/L2NORM', ' STOPPING CRIT.'
@@ -1886,7 +1886,7 @@ contains
       this%l2norm0 = l2norm
     end if
 
-  
+
   !-------------------------------------------------------
       itestmat = 0
       if(itestmat == 1) then
@@ -2013,7 +2013,7 @@ contains
     integer(I4B) :: ibtcnt
     real(DP) :: resin
 ! ------------------------------------------------------------------------------
-    !    
+    !
     ibflag = 0
     !
     ! -- refill amat and rhs with standard conductance
@@ -2194,7 +2194,7 @@ contains
     integer(I4B) :: j, jcol
     real(DP) :: rowsum
 ! ------------------------------------------------------------------------------
-    ! 
+    !
     resid = DZERO
     do n = 1, neq
       if (active(n) > 0) then
@@ -2242,11 +2242,11 @@ contains
         !
         ! -- compute step-size (delta x)
         delx = x(n) - xtemp(n)
-      
+
         ! -- dampen head solution
         x(n) = xtemp(n) + this%gamma * delx
       end do
-    !  
+    !
     ! -- option for using cooley underrelaxation
     else if (this%nonmeth == 2) then
       if (kiter == 1) then
@@ -2268,8 +2268,8 @@ contains
       !
       ! -- modify cooley to use exponential average of past changes
       this%bigchold = (done - this%gamma) * this%bigch  + this%gamma *         &
-                      this%bigchold  
-      ! -- this method does it right after newton - need to do it after 
+                      this%bigchold
+      ! -- this method does it right after newton - need to do it after
       !    underrelaxation and backtracking.
       !
       ! -- compute new head after under-relaxation
@@ -2310,7 +2310,7 @@ contains
         this%wsave(n) = ww
 
         ! -- compute exponential average of past changes in hchold
-        if (kiter == 1) then 
+        if (kiter == 1) then
           ! -- this method does it right after newton
           ! -- need to do it after underrelaxation and backtracking.
           this%hchold(n) = delx
@@ -2334,7 +2334,7 @@ contains
     ! -- return
     return
   end subroutine sln_underrelax
-  
+
   subroutine sln_outer_check(this,hncg, lrch)
 ! ******************************************************************************
 ! sln_outer_check
@@ -2376,7 +2376,7 @@ contains
     ! -- return
     return
   end subroutine sln_outer_check
-  
+
   subroutine sln_get_loc(this, nodesln, str)
 ! ******************************************************************************
 ! sln_get_loc
@@ -2403,7 +2403,7 @@ contains
       call mp%get_mrange(istart, iend)
       if (nodesln >= istart .and. nodesln <= iend) then
         noder = nodesln - istart + 1
-        call mp%get_mcellid(noder, str) 
+        call mp%get_mcellid(noder, str)
         exit
       end if
     end do
@@ -2411,7 +2411,7 @@ contains
     ! -- return
     return
   end subroutine sln_get_loc
-  
+
   subroutine sln_get_nodeu(this, nodesln, im, nodeu)
 ! ******************************************************************************
 ! sln_get_nodeu

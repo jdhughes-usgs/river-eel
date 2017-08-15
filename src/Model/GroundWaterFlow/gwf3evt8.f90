@@ -269,77 +269,76 @@ module EvtModule
         "('Error: In EVT, NSEG must be > 0 but is specified as ',i0)"
 ! ------------------------------------------------------------------------------
     !
-    ! -- get dimensions block
-    call this%parser%GetBlock('DIMENSIONS', isfound, ierr, &
-                              supportOpenClose=.true.)
-    !
-    ! -- parse dimensions block if detected
-    if (isfound) then
-      write(this%iout,'(/1x,a)')'PROCESSING '//trim(adjustl(this%text))// &
-        ' DIMENSIONS'
-      do
-        call this%parser%GetNextLine(endOfBlock)
-        if (endOfBlock) exit
-        call this%parser%GetStringCaps(keyword)
-        select case (keyword)
-        case ('MAXBOUND')
-          if (this%read_as_arrays) then
-            errmsg = 'When READASARRAYS option is used for the selected' // &
-                     ' discretization package, MAXBOUND may not be specified.'
-            call store_error(errmsg)
-            call this%parser%StoreErrorUnit()
-            call ustop()
-          else
-            this%maxbound = this%parser%GetInteger()
-            write(this%iout,'(4x,a,i7)') 'MAXBOUND = ', this%maxbound
-          endif
-        case ('NSEG')
-          this%nseg = this%parser%GetInteger()
-          write(this%iout,'(4x,a,i0)') 'NSEG = ', this%nseg
-          if (this%nseg < 1) then
-            write(errmsg,fmtnsegerr)this%nseg
-            call store_error(errmsg)
-            call this%parser%StoreErrorUnit()
-            call ustop()
-          elseif (this%nseg > 1) then
-            ! NSEG>1 is supported only if readasarrays is false
+    ! Dimensions block is not required if:
+    !   (1) discretization is DIS or DISV, and
+    !   (2) READASARRAYS option has been specified.
+    if (this%read_as_arrays) then
+      this%maxbound = this%dis%get_ncpl()
+    else
+      ! -- get dimensions block
+      call this%parser%GetBlock('DIMENSIONS', isfound, ierr, &
+                                supportOpenClose=.true.)
+      !
+      ! -- parse dimensions block if detected
+      if (isfound) then
+        write(this%iout,'(/1x,a)')'PROCESSING '//trim(adjustl(this%text))// &
+          ' DIMENSIONS'
+        do
+          call this%parser%GetNextLine(endOfBlock)
+          if (endOfBlock) exit
+          call this%parser%GetStringCaps(keyword)
+          select case (keyword)
+          case ('MAXBOUND')
             if (this%read_as_arrays) then
-              errmsg = 'In the EVT package, NSEG cannot be greater than 1' // &
-                       ' when READASARRAYS is used.'
+              errmsg = 'When READASARRAYS option is used for the selected' // &
+                       ' discretization package, MAXBOUND may not be specified.'
               call store_error(errmsg)
               call this%parser%StoreErrorUnit()
               call ustop()
-            endif
-            ! -- Recalculate number of columns required in bound array.
-            if (this%surfratespecified) then
-              this%ncolbnd = 4 + 2*(this%nseg-1)
             else
-              this%ncolbnd = 3 + 2*(this%nseg-1)
+              this%maxbound = this%parser%GetInteger()
+              write(this%iout,'(4x,a,i7)') 'MAXBOUND = ', this%maxbound
             endif
-          endif
-        case default
-          write(errmsg,'(4x,a,a)') &
-            '****ERROR. UNKNOWN '//trim(this%text)//' DIMENSION: ', &
-                                    trim(keyword)
-          call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
-        end select
-      end do
-      !
-      write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' DIMENSIONS'
-    else
-      if (.not. this%read_as_arrays) then
+          case ('NSEG')
+            this%nseg = this%parser%GetInteger()
+            write(this%iout,'(4x,a,i0)') 'NSEG = ', this%nseg
+            if (this%nseg < 1) then
+              write(errmsg,fmtnsegerr)this%nseg
+              call store_error(errmsg)
+              call this%parser%StoreErrorUnit()
+              call ustop()
+            elseif (this%nseg > 1) then
+              ! NSEG>1 is supported only if readasarrays is false
+              if (this%read_as_arrays) then
+                errmsg = 'In the EVT package, NSEG cannot be greater than 1' // &
+                         ' when READASARRAYS is used.'
+                call store_error(errmsg)
+                call this%parser%StoreErrorUnit()
+                call ustop()
+              endif
+              ! -- Recalculate number of columns required in bound array.
+              if (this%surfratespecified) then
+                this%ncolbnd = 4 + 2*(this%nseg-1)
+              else
+                this%ncolbnd = 3 + 2*(this%nseg-1)
+              endif
+            endif
+          case default
+            write(errmsg,'(4x,a,a)') &
+              '****ERROR. UNKNOWN '//trim(this%text)//' DIMENSION: ', &
+                                      trim(keyword)
+            call store_error(errmsg)
+            call this%parser%StoreErrorUnit()
+            call ustop()
+          end select
+        end do
+        !
+        write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' DIMENSIONS'
+      else
         call store_error('ERROR.  REQUIRED DIMENSIONS BLOCK NOT FOUND.')
         call this%parser%StoreErrorUnit()
         call ustop()
       endif
-    endif
-    !
-    if (this%read_as_arrays) then
-      ! Maxbound is not required if READASARRAYS option has been specified.
-      ! If this is the case, calculate Maxbound now.
-      this%maxbound = this%dis%get_ncpl()
     endif
     !
     ! -- verify dimensions were set

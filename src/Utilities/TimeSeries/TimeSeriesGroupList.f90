@@ -14,9 +14,9 @@ module TimeSeriesGroupListModule
   public :: TimeSeriesGroupListType
 
   type :: TimeSeriesGroupListType
-    ! -- Private members
-    integer(I4B),   private :: numGroups = 0
-    type(ListType), private :: tsGroupList
+    ! -- Public members
+    integer(I4B),   public :: numGroups = 0
+    type(ListType), public :: tsGroupList
   contains
     ! -- Public procedures
     procedure, public  :: Add
@@ -25,8 +25,7 @@ module TimeSeriesGroupListModule
     procedure, public  :: GetGroup
     procedure, public  :: Clear
     procedure, public  :: da => tsgl_da
-    ! -- Private procedures
-    procedure, private :: add_time_series_group
+    procedure, public  :: add_time_series_group
   end type TimeSeriesGroupListType
 
 contains
@@ -39,11 +38,13 @@ contains
     class(TimeSeriesGroupListType), intent(inout) :: this
     character(len=*), intent(in) :: filename
     integer(I4B), intent(in) :: iout
-    type(TimeSeriesGroupType), pointer, intent(inout) :: tsGroup
+    class(TimeSeriesGroupType), pointer, intent(inout) :: tsGroup
     ! -- local
+    type(TimeSeriesGroupType), pointer :: tsg
     !
     ! -- Construct and initialize a new time-series group
-    call ConstructTimeSeriesGroup(tsGroup)
+    call ConstructTimeSeriesGroup(tsg)
+    tsGroup => tsg
     call tsGroup%InitializeTsGroup(filename, iout, .true.)
 
     !
@@ -51,6 +52,16 @@ contains
     call this%add_time_series_group(tsGroup)
     return
   end subroutine Add
+
+  subroutine Clear(this)
+    implicit none
+    ! -- dummy
+    class(TimeSeriesGroupListType), intent(inout) :: this
+    ! -- local
+    !
+    call this%tsGroupList%Clear()
+    return
+  end subroutine Clear
 
   function CountGroups(this)
     implicit none
@@ -104,24 +115,14 @@ contains
   subroutine add_time_series_group(this, tsGroup)
     implicit none
     ! -- dummy
-    class(TimeSeriesGroupListType), intent(inout) :: this
-    type(TimeSeriesGroupType), pointer, intent(inout) :: tsGroup
+    class(TimeSeriesGroupListType),      intent(inout) :: this
+    class(TimeSeriesGroupType), pointer, intent(inout) :: tsGroup
     ! -- local
     !
     call AddTimeSeriesGroupToList(this%tsGroupList, tsGroup)
     this%numGroups = this%numGroups + 1
     return
   end subroutine add_time_series_group
-
-  subroutine Clear(this)
-    implicit none
-    ! -- dummy
-    class(TimeSeriesGroupListType), intent(inout) :: this
-    ! -- local
-    !
-    call this%tsGroupList%Clear()
-    return
-  end subroutine Clear
 
   subroutine tsgl_da(this)
     ! -- dummy

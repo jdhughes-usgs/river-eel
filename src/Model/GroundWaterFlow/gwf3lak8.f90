@@ -438,6 +438,7 @@ contains
     integer(I4B) :: itmp
     integer(I4B) :: nlak
     integer(I4B) :: nconn
+    integer(I4B), dimension(:), pointer :: nboundchk
     ! -- format
     !
     ! -- code
@@ -517,6 +518,12 @@ contains
       allocate(caux(this%naux))
     end if
     !
+    ! -- allocate and initialize temporary variables
+    allocate(nboundchk(this%nlakes))
+    do n = 1, this%nlakes
+      nboundchk(n) = 0
+    end do
+    !
     ! -- read lake well data
     ! -- get lakes block
     call this%parser%GetBlock('PACKAGEDATA', isfound, ierr, supportOpenClose=.true.)
@@ -536,9 +543,11 @@ contains
           write(errmsg,'(4x,a,1x,i6)') &
             '****ERROR. lakeno MUST BE > 0 and <= ', this%nlakes
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
+          cycle
         end if
+        
+        ! -- increment nboundchk
+        nboundchk(n) = nboundchk(n) + 1
 
         ! -- strt
         this%strt(n) = this%parser%GetDouble()
@@ -550,8 +559,6 @@ contains
           write(errmsg,'(4x,a,1x,i6)') &
             '****ERROR. nlakecon MUST BE >= 0 for lake ', n
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
         end if
 
         nconn = nconn + ival
@@ -601,28 +608,29 @@ contains
         nlak = nlak + 1
       end do
       !
-      ! -- Check to make sure nlakes records were read
-      if(nlak /= this%nlakes) then
-        write(errmsg,'(a,i0,a,i0,a)')                                          &
-          'ERROR.  NLAKES SPECIFIED AS ', this%nlakes,                   &
-          ' BUT ONLY ',nlak, ' WELL(S) ARE LISTED IN THE LAKES BLOCK.'
-        call store_error(errmsg)
-        call this%parser%StoreErrorUnit()
-        call ustop()
-      end if
-      !
-      ! -- terminate if any errors were detected
-      if (count_errors() > 0) then
-        call this%parser%StoreErrorUnit()
-        call ustop()
-      end if
+      ! -- check for duplicate or missing lakes
+      do n = 1, this%nlakes
+        if (nboundchk(n) == 0) then
+          write(errmsg,'(a,1x,i0)')  'ERROR.  NO DATA SPECIFIED FOR LAKE', n
+          call store_error(errmsg)
+        else if (nboundchk(n) > 1) then
+          write(errmsg,'(a,1x,i0,1x,a,1x,i0,1x,a)')                             &
+            'ERROR.  DATA FOR LAKE', n, 'SPECIFIED', nboundchk(n), 'TIMES'
+          call store_error(errmsg)
+        end if
+      end do
 
       write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' PACKAGEDATA'
     else
       call store_error('ERROR.  REQUIRED PACKAGEDATA BLOCK NOT FOUND.')
+    end if
+    !
+    ! -- terminate if any errors were detected
+    if (count_errors() > 0) then
       call this%parser%StoreErrorUnit()
       call ustop()
     end if
+    !
     ! -- set MAXBOUND
     this%MAXBOUND = nconn
     write(this%iout,'(//4x,a,i7)') 'MAXBOUND = ', this%maxbound
@@ -637,6 +645,9 @@ contains
     if (this%naux > 0) then
       deallocate(caux)
     end if
+    !
+    ! -- deallocate local storage for nboundchk
+    deallocate(nboundchk)
     !
     ! -- return
     return
@@ -664,10 +675,17 @@ contains
     integer(I4B) :: ipos, ipos0
     integer(I4B) :: icellid, icellid0
     real(DP) :: top, bot
+    integer(I4B), dimension(:), pointer :: nboundchk
 
     ! -- format
     !
     ! -- code
+    !
+    ! -- allocate local storage
+    allocate(nboundchk(this%MAXBOUND))
+    do n = 1, this%MAXBOUND
+      nboundchk(n) = 0
+    end do
     !
     ! -- get connectiondata block
     call this%parser%GetBlock('CONNECTIONDATA', isfound, ierr, &
@@ -691,6 +709,7 @@ contains
       call mem_allocate(this%satcond, this%MAXBOUND, 'SATCOND', this%origin)
       call mem_allocate(this%simcond, this%MAXBOUND, 'SIMCOND', this%origin)
       call mem_allocate(this%simlakgw, this%MAXBOUND, 'SIMLAKGW', this%origin)
+      
 
       ! -- process the lake connection data
       write(this%iout,'(/1x,a)')'PROCESSING '//trim(adjustl(this%text))// &
@@ -704,8 +723,7 @@ contains
           write(errmsg,'(4x,a,1x,i6)') &
             '****ERROR. lakeno MUST BE > 0 and <= ', this%nlakes
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
+          cycle
         end if
 
         ! -- read connection number
@@ -714,8 +732,7 @@ contains
           write(errmsg,'(4x,a,1x,i4,1x,a,1x,i6)') &
             '****ERROR. iconn FOR LAKE ', n, 'MUST BE > 1 and <= ', this%nlakeconn(n)
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
+          cycle
         end if
 
         j = ival
@@ -723,6 +740,10 @@ contains
 
         ! -- set imap
         this%imap(ipos) = n
+        
+        !
+        ! -- increment nboundchk
+        nboundchk(ipos) = nboundchk(ipos) + 1
 
         ! -- read gwfnodes from the line
         call this%parser%GetCellid(this%dis%ndim, cellid)
@@ -804,6 +825,10 @@ contains
       write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' CONNECTIONDATA'
     else
       call store_error('ERROR.  REQUIRED CONNECTIONDATA BLOCK NOT FOUND.')
+    end if
+    !
+    ! -- terminate if any errors were detected
+    if (count_errors() > 0) then
       call this%parser%StoreErrorUnit()
       call ustop()
     end if
@@ -891,15 +916,31 @@ contains
           this%belev(ipos) = bot
           this%lakebot(n) = bot
         end if
+        !
+        ! -- check for missing or duplicate lake connections
+        if (nboundchk(ipos) == 0) then
+          write(errmsg,'(a,1x,i0,1x,a,1x,i0)')                                  &
+            'ERROR.  NO DATA SPECIFIED FOR LAKE', n, 'CONNECTION', j
+          call store_error(errmsg)
+        else if (nboundchk(ipos) > 1) then
+          write(errmsg,'(a,1x,i0,1x,a,1x,i0,1x,a,1x,i0,1x,a)')                  &
+            'ERROR.  DATA FOR LAKE', n, 'CONNECTION', j,                        &
+            'SPECIFIED', nboundchk(ipos), 'TIMES'
+          call store_error(errmsg)
+        end if
+        !
+        ! -- set laketop if it has not been assigned
       end do
       if (this%laketop(n) == -DEP20) then
         this%laketop(n) = this%lakebot(n) + 100.
       end if
     end do
     !
+    ! -- deallocate local variable
+    deallocate(nboundchk)
+    !
     ! -- write summary of lake_connection error messages
-    ierr = count_errors()
-    if (ierr > 0) then
+    if (count_errors() > 0) then
       call this%parser%StoreErrorUnit()
       call ustop()
     end if
@@ -925,6 +966,8 @@ contains
     integer(I4B) :: ierr
     logical :: isfound, endOfBlock
     integer(I4B) :: n
+    integer(I4B) :: ntabs
+    integer(I4B), dimension(:), pointer :: nboundchk
 ! ------------------------------------------------------------------------------
 
     ! -- format
@@ -933,6 +976,12 @@ contains
     !
     ! -- skip of no outlets
     if (this%ntables < 1) return
+    !
+    ! -- allocate and initialize nboundchk
+    allocate(nboundchk(this%nlakes))
+    do n = 1, this%nlakes
+      nboundchk(n) = 0
+    end do
     !
     ! -- allocate derived type for table data
     allocate(this%laketables(this%nlakes))
@@ -943,6 +992,7 @@ contains
     !
     ! -- parse lake_tables block if detected
     if (isfound) then
+      ntabs = 0
       ! -- process the lake connection data
       write(this%iout,'(/1x,a)')'PROCESSING '//trim(adjustl(this%text))// &
         ' LAKE_TABLES'
@@ -957,6 +1007,10 @@ contains
           call store_error(errmsg)
           cycle readtable
         end if
+        
+        ! -- increment ntab and nboundchk
+        ntabs = ntabs + 1
+        nboundchk(n) = nboundchk(n) + 1
 
         ! -- read FILE keyword
         call this%parser%GetStringCaps(keyword)
@@ -967,9 +1021,8 @@ contains
               errmsg = 'TAB6 keyword must be followed by "FILEIN" ' //      &
                         'then by filename.'
               call store_error(errmsg)
-              call this%parser%StoreErrorUnit()
-              call ustop()
-            endif
+              cycle readtable
+            end if
             call this%parser%GetString(line)
             call this%lak_read_table(n, line)
           case default
@@ -979,14 +1032,33 @@ contains
             cycle readtable
         end select
       end do readtable
+      
       write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' LAKE_TABLES'
+      !
+      ! -- check for missing or duplicate lake connections
+      if (ntabs < this%ntables) then
+        write(errmsg,'(a,1x,i0,1x,a,1x,i0)')                                    &
+          'ERROR.  TABLE DATA ARE SPECIFIED', ntabs,                            &
+          'TIMES BUT NTABLES IS SET TO', this%ntables
+        call store_error(errmsg)
+      end if
+      do n = 1, this%nlakes
+        if (this%ntabrow(n) > 0 .and. nboundchk(n) > 1) then
+          write(errmsg,'(a,1x,i0,1x,a,1x,i0,1x,a)')                             &
+            'ERROR.  TABLE DATA FOR LAKE', n, 'SPECIFIED', nboundchk(n), 'TIMES'
+          call store_error(errmsg)
+        end if
+      end do
     else
       call store_error('ERROR.  REQUIRED TABLES BLOCK NOT FOUND.')
     end if
     !
+    ! -- deallocate local storage
+    deallocate(nboundchk)
+    !
     ! -- write summary of lake_table error messages
-    ierr = count_errors()
-    if (ierr > 0) then
+    if (count_errors() > 0) then
+      call this%parser%StoreErrorUnit()
       call ustop()
     end if
 
@@ -1065,23 +1137,19 @@ contains
               write(errmsg,'(4x,a)') &
                 '****ERROR. LAKE TABLE NROW MUST BE > 0'
               call store_error(errmsg)
-              call parser%StoreErrorUnit()
-              call ustop()
             end if
           case ('NCOL')
             j = parser%GetInteger()
 
-            if (this%ictype(ipos) == 2 .or. this%ictype(ipos) == 3) then
+            if (this%ictype(ilak) == 2 .or. this%ictype(ilak) == 3) then
               jmin = 4
             else
               jmin = 3
             end if
             if (j < jmin) then
               write(errmsg,'(4x,a,1x,i0)') &
-                '****ERROR. LAKE TABLE NCOL MUST BE > ', jmin
+                '****ERROR. LAKE TABLE NCOL MUST BE >= ', jmin
               call store_error(errmsg)
-              call parser%StoreErrorUnit()
-              call ustop()
             end if
 
           case default
@@ -1089,7 +1157,6 @@ contains
               '****ERROR. UNKNOWN '//trim(this%text)//' DIMENSIONS KEYWORD: ', &
                                      trim(keyword)
             call store_error(errmsg)
-            cycle readdims
         end select
       end do readdims
       if (this%iprpak /= 0) then
@@ -1098,8 +1165,6 @@ contains
       end if
     else
       call store_error('ERROR.  REQUIRED DIMENSIONS BLOCK NOT FOUND.')
-      call parser%StoreErrorUnit()
-      call ustop()
     end if
     !
     ! -- check that ncol and nrow have been specified
@@ -1148,10 +1213,13 @@ contains
         end if
         iconn = this%idxlakeconn(ilak)
         ipos = 0
-        readtabledata: do i=1,this%ntabrow(ilak)
+        readtabledata: do
           call parser%GetNextLine(endOfBlock)
           if (endOfBlock) exit
           ipos = ipos + 1
+          if (ipos > this%ntabrow(ilak)) then
+            cycle readtabledata
+          end if
           this%laketables(ilak)%tabstage(ipos) = parser%GetDouble()
           this%laketables(ilak)%tabvolume(ipos) = parser%GetDouble()
           this%laketables(ilak)%tabsarea(ipos) = parser%GetDouble()
@@ -1159,13 +1227,20 @@ contains
             this%laketables(ilak)%tabwarea(ipos) = parser%GetDouble()
           end if
         end do readtabledata
+        
         if (this%iprpak /= 0) then
           write(this%iout,'(1x,a)')                                             &
             'END OF '//trim(adjustl(this%text))//' TABLE'
         end if
       else
         call store_error('ERROR.  REQUIRED TABLE BLOCK NOT FOUND.')
-        call ustop()
+      end if
+      !
+      ! -- error condition if number of rows read are not equal to nrow
+      if (ipos /= this%ntabrow(ilak)) then
+        write(errmsg,'(a,1x,i0,1x,a,1x,i0,1x,a)') &
+          'ERROR. NROW SET TO',this%ntabrow(ilak), 'BUT', ipos, 'ROWS WERE READ'
+        call store_error(errmsg)
       end if
       !
       ! -- set lake bottom based on table if it is an embedded lake
@@ -1224,8 +1299,7 @@ contains
     end if
     !
     ! -- write summary of lake table error messages
-    ierr = count_errors()
-    if (ierr > 0) then
+    if (count_errors() > 0) then
       call parser%StoreErrorUnit()
       call ustop()
     end if
@@ -1260,6 +1334,7 @@ contains
     !integer(I4B) :: ii, jj, kk, nn
     integer(I4B) :: jj
     real(DP) :: endtim
+    integer(I4B), dimension(:), pointer :: nboundchk
 ! ------------------------------------------------------------------------------
 
     ! -- format
@@ -1268,6 +1343,12 @@ contains
     !
     ! -- skip if no outlets
     if (this%noutlets < 1) return
+    !
+    ! -- allocate and initialize local variables
+    allocate(nboundchk(this%noutlets))
+    do n = 1, this%noutlets
+      nboundchk(n) = 0
+    end do
     !
     ! -- get well_connections block
     call this%parser%GetBlock('OUTLETS', isfound, ierr, supportOpenClose=.true.)
@@ -1300,7 +1381,10 @@ contains
           call store_error(errmsg)
           cycle readoutlet
         end if
-
+        !
+        ! -- increment nboundchk
+        nboundchk(n) = nboundchk(n) + 1
+        !
         ! -- read outlet lakein
         ival = this%parser%GetInteger()
         if (ival <1 .or. ival > this%noutlets) then
@@ -1389,10 +1473,22 @@ contains
 
       end do readoutlet
       write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' OUTLETS'
+      
+      !
+      ! -- check for duplicate or missing outlets
+      do n = 1, this%noutlets
+        if (nboundchk(n) == 0) then
+          write(errmsg,'(a,1x,i0)')  'ERROR.  NO DATA SPECIFIED FOR OUTLET', n
+          call store_error(errmsg)
+        else if (nboundchk(n) > 1) then
+          write(errmsg,'(a,1x,i0,1x,a,1x,i0,1x,a)')                             &
+            'ERROR.  DATA FOR OUTLET', n, 'SPECIFIED', nboundchk(n), 'TIMES'
+          call store_error(errmsg)
+        end if
+      end do
+      
     else
       call store_error('ERROR.  REQUIRED OUTLETS BLOCK NOT FOUND.')
-      call this%parser%StoreErrorUnit()
-      call ustop()
     end if
     !
     ! -- write summary of lake_connection error messages
@@ -1401,7 +1497,9 @@ contains
       call this%parser%StoreErrorUnit()
       call ustop()
     end if
-
+    !
+    ! -- deallocate local storage
+    deallocate(nboundchk)
     !
     ! -- return
     return
@@ -1457,15 +1555,11 @@ contains
               '****ERROR. UNKNOWN '//trim(this%text)//' DIMENSION: ', &
                                      trim(keyword)
             call store_error(errmsg)
-            call this%parser%StoreErrorUnit()
-            call ustop()
         end select
       end do
       write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' DIMENSIONS'
     else
       call store_error('ERROR.  REQUIRED DIMENSIONS BLOCK NOT FOUND.')
-      call this%parser%StoreErrorUnit()
-      call ustop()
     end if
 
     if (this%nlakes < 0) then
@@ -3065,8 +3159,14 @@ contains
         call ustop()
     end select
     !
+    ! -- terminate if any errors were detected
+999 if (count_errors() > 0) then
+      call this%parser%StoreErrorUnit()
+      call ustop()
+    end if
+    !
     ! -- write keyword data to output file
-999 if (this%iprpak /= 0) then
+    if (this%iprpak /= 0) then
       write (this%iout, '(3x,i10,1x,a)') itmp, line(i0:istop)
     end if
     !

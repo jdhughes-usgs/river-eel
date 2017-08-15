@@ -3,7 +3,7 @@ module ConstantsModule
   use KindModule
   public
   ! -- modflow 6 version
-  character(len=40), parameter :: VERSION = '6.0.00 08/10/2017'
+  character(len=40), parameter :: VERSION = '6.0.0 08/11/2017'
   character(len=10), parameter :: MFVNAM = ' 6'
   character(len=*), parameter  :: MFTITLE =                                    &
     'U.S. GEOLOGICAL SURVEY MODULAR HYDROLOGIC MODEL'
@@ -41,7 +41,7 @@ module ConstantsModule
   integer(I4B), parameter :: LENFTYPE = 5
   integer(I4B), parameter :: LENOBSNAME = 40
   integer(I4B), parameter :: LENOBSTYPE = 20
-  integer(I4B), parameter :: LENTIMESERIESNAME = 24
+  integer(I4B), parameter :: LENTIMESERIESNAME = LENOBSNAME
   integer(I4B), parameter :: LENTIMESERIESTEXT = 12
   integer(I4B), parameter :: LENDATETIME = 30
   integer(I4B), parameter :: LINELENGTH = 300
@@ -105,7 +105,7 @@ module ConstantsModule
 
   real(DP), parameter :: DGRAVITY = 9.80665_DP
   real(DP), parameter :: DCD = 0.61_DP
-  
+
   character(len=10), dimension(3, 3), parameter :: cidxnames = reshape (       &
     [ '      NODE', '          ', '          ',                                &
       '     LAYER', '    CELL2D', '          ',                                &

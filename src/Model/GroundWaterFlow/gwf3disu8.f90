@@ -1,6 +1,6 @@
 module GwfDisuModule
-  
-  use ArrayReaders2Module, only: ReadArray2
+
+  use ArrayReadersModule, only: ReadArray
   use KindModule, only: DP, I4B
   use ConstantsModule, only: LENMODELNAME, LENORIGIN, LINELENGTH
   use ConnectionsModule, only: ConnectionsType
@@ -10,9 +10,9 @@ module GwfDisuModule
   use BlockParserModule, only: BlockParserType
   use MemoryManagerModule, only: mem_allocate
   use TdisModule,          only: kstp, kper, pertim, totim, delt
-  
+
   implicit none
-  
+
   private
   public :: GwfDisuType
   public :: disu_cr
@@ -207,7 +207,8 @@ module GwfDisuModule
 ! ------------------------------------------------------------------------------
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr, supportOpenClose=.true.)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, &
+                              supportOpenClose=.true., blockRequired=.false.)
     !
     ! -- set default options
       this%lenuni = 0
@@ -271,7 +272,7 @@ module GwfDisuModule
     ! -- Return
     return
   end subroutine read_options
-  
+
   subroutine read_dimensions(this)
 ! ******************************************************************************
 ! read_dimensions -- Read discretization information from file
@@ -394,15 +395,15 @@ module GwfDisuModule
         call this%parser%GetStringCaps(keyword)
         select case (keyword)
           case ('TOP')
-            call ReadArray2(this%parser%iuactive, this%top, aname(1), &
+            call ReadArray(this%parser%iuactive, this%top, aname(1), &
                             this%ndim, this%nodes, this%iout, 0)
             lname(1) = .true.
           case ('BOT')
-            call ReadArray2(this%parser%iuactive, this%bot, aname(2), &
+            call ReadArray(this%parser%iuactive, this%bot, aname(2), &
                             this%ndim, this%nodes, this%iout, 0)
             lname(2) = .true.
           case ('AREA')
-            call ReadArray2(this%parser%iuactive, this%area, aname(3), &
+            call ReadArray(this%parser%iuactive, this%area, aname(3), &
                             this%ndim, this%nodes, this%iout, 0)
             lname(3) = .true.
           case default
@@ -453,7 +454,7 @@ module GwfDisuModule
     ! -- Return
     return
   end subroutine read_data
-  
+
   subroutine read_vertices(this)
 ! ******************************************************************************
 ! read_vertices -- Read data
@@ -496,7 +497,7 @@ module GwfDisuModule
           write(ermsg, fmtvnum) i, ival
           call store_error(ermsg)
           call this%parser%StoreErrorUnit()
-          call ustop()          
+          call ustop()
         endif
         !
         ! -- x
@@ -547,7 +548,7 @@ module GwfDisuModule
 
   subroutine read_cell2d(this)
 ! ******************************************************************************
-! read_cell2d -- Read information describing the two dimensional (x, y) 
+! read_cell2d -- Read information describing the two dimensional (x, y)
 !   configuration of each cell.
 ! ******************************************************************************
 !
@@ -585,8 +586,8 @@ module GwfDisuModule
     maxvert = 0
     maxvertcell = 0
     !
-    ! -- Initialize estimate of the max number of vertices for each cell 
-    !    (using 5 as default) and initialize the sparse matrix, which will 
+    ! -- Initialize estimate of the max number of vertices for each cell
+    !    (using 5 as default) and initialize the sparse matrix, which will
     !    temporarily store the vertex numbers for each cell.  This will
     !    be converted to iavert and javert after all cell vertices have
     !    been read.
@@ -609,7 +610,7 @@ module GwfDisuModule
           write(ermsg, fmtcnum) i, ival
           call store_error(ermsg)
           call store_error_unit(iuext)
-          call ustop()          
+          call ustop()
         endif
         !
         ! -- Cell x center
@@ -788,7 +789,7 @@ module GwfDisuModule
       write(txt, '(3a, i0)') 'JAVERT ', 'INTEGER ', 'NDIM 1 ', size(this%javert)
       txt(lentxt:lentxt) = new_line('a')
       write(iunit) txt
-    endif    
+    endif
     !
     ! -- write data
     write(iunit) this%nodes                                                     ! nodes
@@ -857,7 +858,7 @@ module GwfDisuModule
   subroutine connection_normal(this, noden, nodem, ihc, xcomp, ycomp, zcomp,   &
                                ipos)
 ! ******************************************************************************
-! connection_normal -- calculate the normal vector components for reduced 
+! connection_normal -- calculate the normal vector components for reduced
 !   nodenumber cell (noden) and its shared face with cell nodem.  ihc is the
 !   horizontal connection flag.
 ! ******************************************************************************
@@ -909,11 +910,11 @@ module GwfDisuModule
     ! -- return
     return
   end subroutine connection_normal
-    
+
   subroutine connection_vector(this, noden, nodem, nozee, satn, satm, ihc,   &
                                xcomp, ycomp, zcomp, conlen)
 ! ******************************************************************************
-! connection_vector -- calculate the unit vector components from reduced 
+! connection_vector -- calculate the unit vector components from reduced
 !   nodenumber cell (noden) to its neighbor cell (nodem).  The saturation for
 !   for these cells are also required so that the vertical position of the cell
 !   cell centers can be calculated.  ihc is the horizontal flag.  Also return
@@ -978,7 +979,7 @@ module GwfDisuModule
     ! -- return
     return
   end subroutine connection_vector
-    
+
   subroutine allocate_scalars(this, name_model)
 ! ******************************************************************************
 ! allocate_scalars -- Allocate and initialize scalar variables in this class
@@ -999,7 +1000,7 @@ module GwfDisuModule
     !
     ! -- Allocate variables for DISU
     call mem_allocate(this%nvert, 'NVERT', this%origin)
-    !    
+    !
     ! -- Set values
     this%ndim = 1
     this%nvert = 0
@@ -1044,7 +1045,7 @@ module GwfDisuModule
 ! ******************************************************************************
 ! nodeu_from_string -- Receive a string and convert the string to a user
 !   nodenumber.  The model is unstructured; just read user nodenumber.
-!   If flag_string argument is present and true, the first token in string 
+!   If flag_string argument is present and true, the first token in string
 !   is allowed to be a string (e.g. boundary name). In this case, if a string
 !   is encountered, return value as -2.
 ! ******************************************************************************
@@ -1103,15 +1104,15 @@ module GwfDisuModule
     !
     ! -- return
     return
-    
+
   end function nodeu_from_string
-  
+
   function nodeu_from_cellid(this, cellid, inunit, iout, flag_string, &
                                      allow_zero) result(nodeu)
 ! ******************************************************************************
 ! nodeu_from_cellid -- Receive cellid as a string and convert the string to a
 !   user nodenumber.
-!   If flag_string argument is present and true, the first token in string 
+!   If flag_string argument is present and true, the first token in string
 !   is allowed to be a string (e.g. boundary name). In this case, if a string
 !   is encountered, return value as -2.
 !   If allow_zero argument is present and true, if all indices equal zero, the
@@ -1120,7 +1121,7 @@ module GwfDisuModule
 ! ******************************************************************************
     implicit none
     ! -- return
-    integer(I4B) :: nodeu 
+    integer(I4B) :: nodeu
     ! -- dummy
     class(GwfDisuType)               :: this
     character(len=*),  intent(inout) :: cellid
@@ -1174,7 +1175,7 @@ module GwfDisuModule
     ! -- return
     return
   end function nodeu_from_cellid
-  
+
   logical function supports_layers(this)
     implicit none
     ! -- dummy
@@ -1254,7 +1255,7 @@ module GwfDisuModule
     !
     ! -- Read the array
     ! -- Read unstructured input
-    call ReadArray2(in, itemp, aname, this%ndim, nval, iout, 0)
+    call ReadArray(in, itemp, aname, this%ndim, nval, iout, 0)
     !
     ! -- If reduced model, then need to copy from itemp(=>ibuff) to iarray
     if(this%nodes <  this%nodesuser) then
@@ -1318,7 +1319,7 @@ module GwfDisuModule
     !
     ! -- Read the array
     ! -- Read structured input
-    call ReadArray2(in, dtemp, aname, this%ndim, nval, iout, 0)
+    call ReadArray(in, dtemp, aname, this%ndim, nval, iout, 0)
     !
     ! -- If reduced model, then need to copy from dtemp(=>dbuff) to darray
     if(this%nodes <  this%nodesuser) then
@@ -1360,7 +1361,7 @@ module GwfDisuModule
 ! ------------------------------------------------------------------------------
     !
     ! -- Read unstructured and then copy into darray
-    call ReadArray2(inunit, this%dbuff, aname, this%ndim, maxbnd, iout, 0)
+    call ReadArray(inunit, this%dbuff, aname, this%ndim, maxbnd, iout, 0)
     do ipos = 1, maxbnd
       darray(icolbnd, ipos) = this%dbuff(ipos)
     enddo
@@ -1400,7 +1401,7 @@ module GwfDisuModule
     character(len=*), intent(in)                   :: aname
     character(len=*), intent(in)                   :: cdatafmp
     integer(I4B), intent(in)                       :: nvaluesp
-    integer(I4B), intent(in)                       :: nwidthp 
+    integer(I4B), intent(in)                       :: nwidthp
     character(len=*), intent(in)                   :: editdesc
     real(DP), intent(in)                           :: dinact
     ! -- local
@@ -1528,7 +1529,7 @@ module GwfDisuModule
 ! ------------------------------------------------------------------------------
     !
     ! -- For unstructured, read nodelist directly, then check node numbers
-    call ReadArray2(inunit, nodelist, aname, this%ndim, maxbnd, iout, 0)
+    call ReadArray(inunit, nodelist, aname, this%ndim, maxbnd, iout, 0)
     do noder = 1, maxbnd
       if(noder < 1 .or. noder > this%nodes) then
         write(errmsg, *) 'ERROR.  INVALID NODE NUMBER: ', noder

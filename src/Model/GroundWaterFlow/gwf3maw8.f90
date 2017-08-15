@@ -385,12 +385,18 @@ contains
     integer(I4B) :: jj
     integer(I4B) :: iaux
     integer(I4B) :: itmp
-    integer(I4B) :: nwel
     integer(I4B) :: ierr
     real(DP) :: endtim
+    integer(I4B), dimension(:), pointer :: nboundchk
     ! -- format
     !
     ! -- code
+    !
+    ! -- allocate and initialize temporary variables
+    allocate(nboundchk(this%nmawwells))
+    do n = 1, this%nmawwells
+      nboundchk(n) = 0
+    end do
     !
     ! -- initialize itmp
     itmp = 0
@@ -416,7 +422,6 @@ contains
     if (isfound) then
       write(this%iout,'(/1x,a)')'PROCESSING '//trim(adjustl(this%text))// &
         ' PACKAGEDATA'
-      nwel = 0
       do
         call this%parser%GetNextLine(endOfBlock)
         if (endOfBlock) exit
@@ -427,8 +432,11 @@ contains
           write(errmsg,'(4x,a,1x,i6)') &
             '****ERROR. IMAW MUST BE > 0 and <= ', this%nmawwells
           call store_error(errmsg)
-          call ustop()
+          cycle
         end if
+        
+        ! -- increment nboundchk
+        nboundchk(n) = nboundchk(n) + 1
 
         ! -- radius
         rval = this%parser%GetDouble()
@@ -436,7 +444,7 @@ contains
           write(errmsg,'(4x,a,1x,i6,1x,a)') &
             '****ERROR. RADIUS FOR WELL', n, 'MUST BE GREATER THAN ZERO.'
           call store_error(errmsg)
-          call ustop()
+          cycle
         end if
         this%mawwells(n)%radius = rval
         this%mawwells(n)%area = DPI * rval**DTWO
@@ -460,9 +468,6 @@ contains
           write(errmsg,'(4x,a,1x,i6,1x,a)') &
             '****ERROR. CONDEQN FOR WELL', n, &
             'MUST BE "CONDUCTANCE", "THEIM" "MEAN", OR "SKIN".'
-          call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
         end if
         ! -- ngwnodes
         ival = this%parser%GetInteger()
@@ -470,10 +475,11 @@ contains
           write(errmsg,'(4x,a,1x,i6,1x,a)') &
             '****ERROR. NGWFNODES FOR WELL', n, 'MUST BE GREATER THAN ZERO'
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
         end if
-        this%mawwells(n)%ngwfnodes = ival
+        
+        if (ival > 0) then
+          this%mawwells(n)%ngwfnodes = ival
+        end if
 
         ! -- allocate storage for connection data needed for the MAW well
         allocate(this%mawwells(n)%gwfnodes(this%mawwells(n)%ngwfnodes))
@@ -537,38 +543,31 @@ contains
                                                 this%auxname(iaux), &
                                                 bndName, this%parser%iuactive)
         end do
-        nwel = nwel + 1
       end do
-      !
-      ! -- Check to make sure nmawwells records were read
-      if(nwel /= this%nmawwells) then
-        write(errmsg,'(a,i0,a,i0,a)')                                          &
-          'ERROR.  NMAWWELLS SPECIFIED AS ', this%nmawwells,                   &
-          ' BUT ONLY ',nwel, ' WELL(S) ARE LISTED IN THE WELLS BLOCK.'
-        call store_error(errmsg)
-        call store_error_unit(this%inunit)
-        call ustop()
-      endif
-      !
-      ! -- Check to make sure each mawwell was read
-      do n = 1, this%nmawwells
-        if (this%mawwells(n)%radius == DEP20) then
-          write(errmsg,'(a,i0,a)')                                               &
-            'ERROR.  IN PACKAGEDATA BLOCK, MAW INFORMATION FOR MAW ', n,         &
-            ' WAS NOT PROVIDED.'
-          call store_error(errmsg)
-        endif
-      enddo
-      if (count_errors() > 0) then
-        call store_error_unit(this%inunit)
-        call ustop()
-      endif
 
       write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' PACKAGEDATA'
+      !
+      ! -- check for duplicate or missing wells
+      do n = 1,  this%nmawwells
+        if (nboundchk(n) == 0) then
+          write(errmsg,'(a,1x,i0)')  'ERROR.  NO DATA SPECIFIED FOR MAW WELL', n
+          call store_error(errmsg)
+        else if (nboundchk(n) > 1) then
+          write(errmsg,'(a,1x,i0,1x,a,1x,i0,1x,a)')                             &
+            'ERROR.  DATA FOR MAW WELL', n, 'SPECIFIED', nboundchk(n), 'TIMES'
+          call store_error(errmsg)
+        end if
+      end do
     else
       call store_error('ERROR.  REQUIRED PACKAGEDATA BLOCK NOT FOUND.')
+    end if
+    !
+    ! -- terminate if any errors were detected
+    if (count_errors() > 0) then
+      call this%parser%StoreErrorUnit()
       call ustop()
     end if
+    !
     ! -- set MAXBOUND
     this%MAXBOUND = itmp
     write(this%iout,'(//4x,a,i7)') 'MAXBOUND = ', this%maxbound
@@ -577,6 +576,9 @@ contains
     if (this%naux > 0) then
       deallocate(caux)
     end if
+    !
+    ! -- deallocate local storage for nboundchk
+    deallocate(nboundchk)
     !
     ! -- return
     return
@@ -597,14 +599,29 @@ contains
     character(len=LINELENGTH) :: errmsg
     character(len=LINELENGTH) :: cellid
     integer(I4B) :: ierr, ival
+    integer(I4b) :: ipos
     logical :: isfound, endOfBlock
     real(DP) :: rval
     integer(I4B) :: j, n
     integer(I4B) :: nn
+    integer(I4B), dimension(:), pointer :: nboundchk
+    integer(I4B), dimension(:), pointer :: iachk
+    
 ! ------------------------------------------------------------------------------
     ! -- format
     !
     ! -- code
+    !
+    ! -- allocate and initialize local storage
+    allocate(iachk(this%nmawwells+1))
+    iachk(1) = 1
+    do n = 1, this%nmawwells
+      iachk(n+1) = iachk(n) +  this%mawwells(n)%ngwfnodes
+    end do
+    allocate(nboundchk(this%MAXBOUND))
+    do n = 1, this%MAXBOUND
+      nboundchk(n) = 0
+    end do
     !
     ! -- get well_connections block
     call this%parser%GetBlock('CONNECTIONDATA', isfound, ierr, &
@@ -624,7 +641,7 @@ contains
           write(errmsg,'(4x,a,1x,i6)') &
             '****ERROR. IMAW MUST BE > 0 and <= ', this%nmawwells
           call store_error(errmsg)
-          call ustop()
+          cycle
         end if
 
         ! -- read connection number
@@ -633,9 +650,12 @@ contains
           write(errmsg,'(4x,a,1x,i4,1x,a,1x,i6)') &
             '****ERROR. JCONN FOR WELL ', n, 'MUST BE > 1 and <= ', this%mawwells(n)%ngwfnodes
           call store_error(errmsg)
-          call this%parser%StoreErrorUnit()
-          call ustop()
+          cycle
         end if
+        
+        ipos = iachk(n) + ival - 1
+        nboundchk(ipos) = nboundchk(ipos) + 1
+        
         j = ival
         ! -- read gwfnodes from the line
         call this%parser%GetCellid(this%dis%ndim, cellid)
@@ -680,14 +700,36 @@ contains
         end if
       end do
       write(this%iout,'(1x,a)')'END OF '//trim(adjustl(this%text))//' CONNECTIONDATA'
+      
+      ipos = 0
+      do n = 1, this%nmawwells
+        do j = 1, this%mawwells(n)%ngwfnodes
+          ipos = ipos + 1
+          !
+          ! -- check for missing or duplicate maw well connections
+          if (nboundchk(ipos) == 0) then
+            write(errmsg,'(a,1x,i0,1x,a,1x,i0)')                                &
+              'ERROR.  NO DATA SPECIFIED FOR MAW WELL', n, 'CONNECTION', j
+            call store_error(errmsg)
+          else if (nboundchk(ipos) > 1) then
+            write(errmsg,'(a,1x,i0,1x,a,1x,i0,1x,a,1x,i0,1x,a)')                &
+              'ERROR.  DATA FOR MAW WELL', n, 'CONNECTION', j,                  &
+              'SPECIFIED', nboundchk(n), 'TIMES'
+            call store_error(errmsg)
+          end if
+        end do
+      end do
     else
       call store_error('ERROR.  REQUIRED CONNECTIONDATA BLOCK NOT FOUND.')
-      call ustop()
     end if
     !
-    !write summary of maw well_initialize error messages
-    ierr = count_errors()
-    if (ierr > 0) then
+    ! -- deallocate local variable
+    deallocate(iachk)
+    deallocate(nboundchk)
+    !
+    ! -- write summary of maw well_connection error messages
+    if (count_errors() > 0) then
+      call this%parser%StoreErrorUnit()
       call ustop()
     end if
     !

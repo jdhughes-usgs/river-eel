@@ -5,7 +5,7 @@ module BaseDisModule
   use SmoothingModule,         only: sQuadraticSaturation
   use ConnectionsModule,       only: ConnectionsType
   use InputOutputModule,       only: URWORD, ubdsv1
-  use SimModule,               only: count_errors, store_error, &
+  use SimModule,               only: count_errors, store_error,                &
                                      store_error_unit, ustop
   use BlockParserModule,       only: BlockParserType
   use MemoryManagerModule,     only: mem_allocate
@@ -54,8 +54,8 @@ module BaseDisModule
     !    be passed the user nodenumber.  For some other grids, it can also
     !    be passed an index.  For dis3d the index is k, i, j, and for 
     !    disv the index is k, n.
-    generic   :: get_nodenumber => get_nodenumber_idx1,                       &
-                                   get_nodenumber_idx2,                       &
+    generic   :: get_nodenumber => get_nodenumber_idx1,                        &
+                                   get_nodenumber_idx2,                        &
                                    get_nodenumber_idx3
     procedure :: get_nodenumber_idx1
     procedure :: get_nodenumber_idx2
@@ -343,13 +343,14 @@ module BaseDisModule
 !
 !    SPECIFICATIONS:
 ! ------------------------------------------------------------------------------
+    ! -- modules
     use ConstantsModule, only: LINELENGTH
     use SimModule, only: store_error
-    implicit none
+    ! -- dummy
     class(DisBaseType), intent(in) :: this
     integer(I4B), intent(in) :: nodeu
     integer(I4B), intent(in) :: icheck
-    character(len=LINELENGTH) :: errmsg
+    ! -- local
     integer(I4B) :: nodenumber
 ! ------------------------------------------------------------------------------
     !
@@ -394,7 +395,6 @@ module BaseDisModule
 !    SPECIFICATIONS:
 ! ------------------------------------------------------------------------------
     use SimModule, only: ustop, store_error
-    implicit none
     ! -- dummy
     class(DisBaseType), intent(in) :: this
     integer(I4B), intent(in) :: k, i, j
@@ -865,7 +865,7 @@ module BaseDisModule
     return
   end subroutine read_int_array
 
-  subroutine read_dbl_array(this, line, lloc, istart, istop, iout, in, &
+  subroutine read_dbl_array(this, line, lloc, istart, istop, iout, in,         &
                             darray, aname)
 ! ******************************************************************************
 ! read_dbl_array -- Read a GWF double precision array
@@ -1012,8 +1012,8 @@ module BaseDisModule
         noder = this%get_nodenumber(nodeu, 0)
         if(noder <= 0) then
           call this%nodeu_to_string(nodeu, nodestr)
-          write(errmsg, *) &
-                  ' Cell is outside active grid domain: ' // &
+          write(errmsg, *)                                                     &
+                  ' Cell is outside active grid domain: ' //                   &
                   trim(adjustl(nodestr))
           call store_error(errmsg)
         endif
@@ -1271,7 +1271,7 @@ module BaseDisModule
     character(len=*), intent(in), optional :: boundname
     ! -- local
     integer(I4B) :: nodeu
-    character(len=*), parameter :: fmt1 = &
+    character(len=*), parameter :: fmt1 =                                      &
       "(1X,'BOUNDARY ',I8,'  CELL ',A20,'   RATE ', 1PG15.6,2x,A)"
     character(len=LENBOUNDNAME) :: bname
     character(len=LINELENGTH) :: nodestr

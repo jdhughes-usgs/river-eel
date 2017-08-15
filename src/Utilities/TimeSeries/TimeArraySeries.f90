@@ -1,6 +1,6 @@
 module TimeArraySeriesModule
 
-  use ArrayReaders2Module, only: ReadArray2
+  use ArrayReadersModule, only: ReadArray
   use BlockParserModule,  only: BlockParserType
   use ConstantsModule,    only: LINELENGTH, UNDEFINED, STEPWISE, LINEAR, &
                                 LENTIMESERIESNAME, LENBIGLINE, LENHUGELINE
@@ -416,7 +416,7 @@ contains
       if (isFound) then
         ta%taTime = this%parser%GetDouble()
         ! -- Read the array
-        call ReadArray2(this%parser%iuactive, ta%taArray, this%Name, &
+        call ReadArray(this%parser%iuactive, ta%taArray, this%Name, &
                         this%dis%ndim, ncol, nrow, 1, nodesperlayer, &
                         this%iout, 0, 0)
         ! -- multiply values by sfac

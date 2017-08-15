@@ -1,4 +1,3 @@
-! Module for exchanging information between two numerical models
 module NumericalExchangeModule
 
   use KindModule,            only: DP, I4B
@@ -57,7 +56,7 @@ module NumericalExchangeModule
   end type NumericalExchangeType
 
 contains
-  
+
   subroutine exg_df(this)
 ! ******************************************************************************
 ! exg_df -- define the exchange
@@ -77,7 +76,7 @@ contains
     ! -- return
     return
   end subroutine exg_df
-  
+
   subroutine exg_ac(this, sparse)
 ! ******************************************************************************
 ! exg_ac -- If an implicit exchange then add connections to sparse
@@ -106,7 +105,7 @@ contains
     ! -- return
     return
   end subroutine exg_ac
-  
+
   subroutine exg_mc(this, iasln, jasln)
 ! ******************************************************************************
 ! exg_mc -- Map the connections in the global matrix
@@ -114,6 +113,7 @@ contains
 !
 !    SPECIFICATIONS:
 ! ------------------------------------------------------------------------------
+    ! -- module
     use SparseModule, only:sparsematrix
     ! -- dummy
     class(NumericalExchangeType) :: this
@@ -127,14 +127,14 @@ contains
       do n = 1, this%nexg
         iglo = this%nodem1(n)+this%m1%moffset
         jglo = this%nodem2(n)+this%m2%moffset
-        !find jglobal value in row iglo and store in idxglo
+        ! -- find jglobal value in row iglo and store in idxglo
         do ipos = iasln(iglo), iasln(iglo + 1) - 1
           if(jglo == jasln(ipos)) then
             this%idxglo(n) = ipos
             exit
           endif
         enddo
-        !find and store symmetric location
+        ! -- find and store symmetric location
         do ipos = iasln(jglo), iasln(jglo + 1) - 1
           if(iglo == jasln(ipos)) then
             this%idxsymglo(n) = ipos
@@ -191,7 +191,6 @@ contains
 !    SPECIFICATIONS:
 ! ------------------------------------------------------------------------------
     ! -- modules
-    use ConstantsModule, only: DZERO
     ! -- dummy
     class(NumericalExchangeType) :: this
     integer(I4B),intent(in) :: kiter
@@ -232,7 +231,7 @@ contains
         amatsln(idiagsln) = amatsln(idiagsln) - this%cond(i)
       enddo
     else
-      !nothing to do here
+      ! -- nothing to do here
     endif
     !
     ! -- return
@@ -317,7 +316,7 @@ contains
     ! -- return
     return
   end subroutine exg_cnvg
-  
+
   subroutine exg_ot(this)
 ! ******************************************************************************
 ! exg_ot
@@ -336,7 +335,7 @@ contains
     ! -- format
     character(len=*), parameter :: fmtheader =                                 &
      "(/1x, 'SUMMARY OF EXCHANGE RATES FOR EXCHANGE ', a, ' WITH ID ', i0, /,  &
-       2a16, 4a16, /, 96('-'))"
+       &2a16, 4a16, /, 96('-'))"
     character(len=*), parameter :: fmtdata =                                   &
      "(2a16, 4(1pg16.6))"
 ! ------------------------------------------------------------------------------
@@ -427,7 +426,7 @@ contains
     ! -- return
     return
   end subroutine allocate_arrays
-  
+
   subroutine exg_da(this)
 ! ******************************************************************************
 ! exg_da
@@ -488,7 +487,7 @@ contains
 ! ------------------------------------------------------------------------------
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, blockRequired=.false.)
     !
     ! -- parse options block if detected
     if (isfound) then
@@ -613,7 +612,7 @@ contains
     !
     return
   end subroutine AddNumericalExchangeToList
-  
+
   function GetNumericalExchangeFromList(list, idx) result (res)
     implicit none
     ! -- dummy

@@ -1,6 +1,6 @@
 module GwfDisModule
 
-  use ArrayReaders2Module, only: ReadArray2
+  use ArrayReadersModule, only: ReadArray
   use KindModule, only: DP, I4B
   use ConstantsModule, only: LINELENGTH
   use BaseDisModule, only: DisBaseType
@@ -10,7 +10,7 @@ module GwfDisModule
   use BlockParserModule, only: BlockParserType
   use MemoryManagerModule, only: mem_allocate
   use TdisModule,          only: kstp, kper, pertim, totim, delt
-  
+
   implicit none
   private
   public dis_cr, GwfDisType
@@ -144,7 +144,7 @@ module GwfDisModule
     call mem_deallocate(this%nodereduced)
     call mem_deallocate(this%nodeuser)
     deallocate(this%botm)
-    deallocate(this%idomain) 
+    deallocate(this%idomain)
     !
     ! -- Return
     return
@@ -170,7 +170,8 @@ module GwfDisModule
 ! ------------------------------------------------------------------------------
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr, supportOpenClose=.true.)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, &
+                              supportOpenClose=.true., blockRequired=.false.)
     !
     ! -- set default options
       this%lenuni = 0
@@ -311,7 +312,7 @@ module GwfDisModule
     ! -- Return
     return
   end subroutine read_dimensions
-  
+
   subroutine read_griddata(this)
 ! ******************************************************************************
 ! read_griddata -- Read data
@@ -353,8 +354,8 @@ module GwfDisModule
 ! ------------------------------------------------------------------------------
     !
     ! -- Allocate arrays used in this subroutine
-    call mem_allocate(this%delr, this%ncol, 'DELR', this%origin) 
-    call mem_allocate(this%delc, this%nrow, 'DELC', this%origin) 
+    call mem_allocate(this%delr, this%ncol, 'DELR', this%origin)
+    call mem_allocate(this%delc, this%nrow, 'DELC', this%origin)
     allocate(this%idomain(this%ncol, this%nrow, this%nlay))
     allocate(this%botm(this%ncol, this%nrow, 0:this%nlay))
     !
@@ -369,37 +370,37 @@ module GwfDisModule
         call this%parser%GetStringCaps(keyword)
         select case (keyword)
           case ('DELR')
-            call ReadArray2(this%parser%iuactive, this%delr, aname(1), &
+            call ReadArray(this%parser%iuactive, this%delr, aname(1), &
                             this%ndim, this%ncol, this%iout, 0)
             lname(1) = .true.
           case ('DELC')
-            call ReadArray2(this%parser%iuactive, this%delc, aname(2), &
+            call ReadArray(this%parser%iuactive, this%delc, aname(2), &
                             this%ndim, this%nrow, this%iout, 0)
             lname(2) = .true.
           case ('TOP')
-            call ReadArray2(this%parser%iuactive, this%botm(:,:,0), aname(3), &
+            call ReadArray(this%parser%iuactive, this%botm(:,:,0), aname(3), &
                             this%ndim, this%ncol, this%nrow, this%iout, 0)
             lname(3) = .true.
           case ('BOTM')
             call this%parser%GetStringCaps(keyword)
             if (keyword .EQ. 'LAYERED') then
-              call ReadArray2(this%parser%iuactive, this%botm(:,:,1:this%nlay), &
+              call ReadArray(this%parser%iuactive, this%botm(:,:,1:this%nlay), &
                               aname(4), this%ndim, this%ncol, this%nrow, &
                               this%nlay, this%iout, 1, this%nlay)
             else
               nvals = this%ncol * this%nrow * this%nlay
-              call ReadArray2(this%parser%iuactive, this%botm(:,:,1:this%nlay), &
+              call ReadArray(this%parser%iuactive, this%botm(:,:,1:this%nlay), &
                               aname(4), this%ndim, nvals, this%iout)
             end if
             lname(4) = .true.
           case ('IDOMAIN')
             call this%parser%GetStringCaps(keyword)
             if (keyword .EQ. 'LAYERED') then
-              call ReadArray2(this%parser%iuactive, this%idomain, aname(5),    &
+              call ReadArray(this%parser%iuactive, this%idomain, aname(5),    &
                               this%ndim, this%ncol, this%nrow, this%nlay,      &
                               this%iout, 1, this%nlay)
             else
-              call ReadArray2(this%parser%iuactive, this%idomain, aname(5),    &
+              call ReadArray(this%parser%iuactive, this%idomain, aname(5),    &
                               this%ndim, this%nodesuser, 1, 1, this%iout, 0, 0)
             end if
             lname(5) = .true.
@@ -756,7 +757,7 @@ module GwfDisModule
   function get_nodenumber_idx3(this, k, i, j, icheck)                  &
     result(nodenumber)
 ! ******************************************************************************
-! get_nodenumber_idx3 -- Return a nodenumber from the user specified layer, row, 
+! get_nodenumber_idx3 -- Return a nodenumber from the user specified layer, row,
 !                        and column with an option to perform a check.
 ! ******************************************************************************
 !
@@ -907,7 +908,7 @@ module GwfDisModule
 ! ******************************************************************************
 ! nodeu_from_string -- Receive a string and convert the string to a user
 !   nodenumber.  The model discretization is DIS; read layer, row, and column.
-!   If flag_string argument is present and true, the first token in string 
+!   If flag_string argument is present and true, the first token in string
 !   is allowed to be a string (e.g. boundary name). In this case, if a string
 !   is encountered, return value as -2.
 ! ******************************************************************************
@@ -988,15 +989,15 @@ module GwfDisModule
     !
     ! -- return
     return
-    
+
   end function nodeu_from_string
-  
+
   function nodeu_from_cellid(this, cellid, inunit, iout, flag_string, &
                                      allow_zero) result(nodeu)
 ! ******************************************************************************
 ! nodeu_from_cellid -- Receive cellid as a string and convert the string to a
 !   user nodenumber.
-!   If flag_string argument is present and true, the first token in string 
+!   If flag_string argument is present and true, the first token in string
 !   is allowed to be a string (e.g. boundary name). In this case, if a string
 !   is encountered, return value as -2.
 !   If allow_zero argument is present and true, if all indices equal zero, the
@@ -1081,8 +1082,8 @@ module GwfDisModule
     ! -- return
     return
   end function nodeu_from_cellid
-                   
-  
+
+
   logical function supports_layers(this)
     implicit none
     ! -- dummy
@@ -1091,7 +1092,7 @@ module GwfDisModule
     supports_layers = .true.
     return
   end function supports_layers
-  
+
   function get_ncpl(this)
 ! ******************************************************************************
 ! get_ncpl -- Return number of cells per layer.  This is nrow * ncol
@@ -1116,7 +1117,7 @@ module GwfDisModule
   subroutine connection_normal(this, noden, nodem, ihc, xcomp, ycomp, zcomp,   &
                                ipos)
 ! ******************************************************************************
-! connection_normal -- calculate the normal vector components for reduced 
+! connection_normal -- calculate the normal vector components for reduced
 !   nodenumber cell (noden) and its shared face with cell nodem.  ihc is the
 !   horizontal connection flag.  Connection normal is a normal vector pointing
 !   outward from the shared face between noden and nodem.
@@ -1178,14 +1179,14 @@ module GwfDisModule
     ! -- return
     return
   end subroutine connection_normal
-    
+
   subroutine connection_vector(this, noden, nodem, nozee, satn, satm, ihc,     &
                                xcomp, ycomp, zcomp, conlen)
 ! ******************************************************************************
-! connection_vector -- calculate the unit vector components from reduced 
+! connection_vector -- calculate the unit vector components from reduced
 !   nodenumber cell (noden) to its neighbor cell (nodem).  The saturation for
 !   for these cells are also required so that the vertical position of the cell
-!   cell centers can be calculated.  ihc is the horizontal flag.  
+!   cell centers can be calculated.  ihc is the horizontal flag.
 ! ******************************************************************************
 !
 !    SPECIFICATIONS:
@@ -1320,12 +1321,12 @@ module GwfDisModule
     if (line(istart:istop).EQ.'LAYERED') then
       !
       ! -- Read layered input
-      call ReadArray2(in, itemp, aname, this%ndim, ncol, nrow, nlay, nval, &
+      call ReadArray(in, itemp, aname, this%ndim, ncol, nrow, nlay, nval, &
                       iout, 1, nlay)
     else
       !
       ! -- Read unstructured input
-      call ReadArray2(in, itemp, aname, this%ndim, nval, iout, 0)
+      call ReadArray(in, itemp, aname, this%ndim, nval, iout, 0)
     end if
     !
     ! -- If reduced model, then need to copy from itemp(=>ibuff) to iarray
@@ -1395,12 +1396,12 @@ module GwfDisModule
     if (line(istart:istop).EQ.'LAYERED') then
       !
       ! -- Read structured input
-      call ReadArray2(in, dtemp, aname, this%ndim, ncol, nrow, nlay, nval, &
+      call ReadArray(in, dtemp, aname, this%ndim, ncol, nrow, nlay, nval, &
                       iout, 1, nlay)
     else
       !
       ! -- Read unstructured input
-      call ReadArray2(in, dtemp, aname, this%ndim, nval, iout, 0)
+      call ReadArray(in, dtemp, aname, this%ndim, nval, iout, 0)
     end if
     !
     ! -- If reduced model, then need to copy from dtemp(=>dbuff) to darray
@@ -1461,7 +1462,7 @@ module GwfDisModule
     ! -- Read the array
     if(this%ndim > 1) then
       nval = ncol * nrow
-      call ReadArray2(inunit, this%dbuff, aname, this%ndim, nval, iout, 0)
+      call ReadArray(inunit, this%dbuff, aname, this%ndim, nval, iout, 0)
       !
       ! -- Copy array into bound
       ipos = 1
@@ -1493,7 +1494,7 @@ module GwfDisModule
     else
       !
       ! -- Read unstructured and then copy into darray
-      call ReadArray2(inunit, this%dbuff, aname, this%ndim, maxbnd, iout, 0)
+      call ReadArray(inunit, this%dbuff, aname, this%ndim, maxbnd, iout, 0)
       do ipos = 1, maxbnd
         darray(icolbnd, ipos) = this%dbuff(ipos)
       enddo
@@ -1534,7 +1535,7 @@ module GwfDisModule
     character(len=*), intent(in)                   :: aname
     character(len=*), intent(in)                   :: cdatafmp
     integer(I4B), intent(in)                       :: nvaluesp
-    integer(I4B), intent(in)                       :: nwidthp 
+    integer(I4B), intent(in)                       :: nwidthp
     character(len=*), intent(in)                   :: editdesc
     real(DP), intent(in)                           :: dinact
     ! -- local
@@ -1685,7 +1686,7 @@ module GwfDisModule
     if(this%ndim > 1) then
       !
       nval = ncol * nrow
-      call ReadArray2(inunit, this%ibuff, aname, this%ndim, ncol, nrow, nlay, nval, iout, 0, 0)
+      call ReadArray(inunit, this%ibuff, aname, this%ndim, ncol, nrow, nlay, nval, iout, 0, 0)
       !
       ! -- Copy array into nodelist
       ipos = 1
@@ -1732,7 +1733,7 @@ module GwfDisModule
     else
       !
       ! -- For unstructured, read nodelist directly, then check node numbers
-      call ReadArray2(inunit, nodelist, aname, this%ndim, maxbnd, iout, 0)
+      call ReadArray(inunit, nodelist, aname, this%ndim, maxbnd, iout, 0)
       do noder = 1, maxbnd
         if(noder < 1 .or. noder > this%nodes) then
           write(errmsg, *) 'ERROR.  INVALID NODE NUMBER: ', noder

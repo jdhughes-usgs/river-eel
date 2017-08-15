@@ -674,7 +674,7 @@ contains
     ierr = 0
     !
     ! -- get BEGIN line of OPTIONS block
-    call this%parser%GetBlock('OPTIONS', found, ierr)
+    call this%parser%GetBlock('OPTIONS', found, ierr, blockRequired=.false.)
     if (ierr /= 0) then
       ! end of file
       ermsg = 'End-of-file encountered while searching for' // &

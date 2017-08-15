@@ -10,9 +10,9 @@ module GwfNpfModule
   use GwfIcModule,                only: GwfIcType
   use Xt3dModule,                 only: Xt3dType
   use BlockParserModule,          only: BlockParserType
-  
+
   implicit none
-  
+
   private
   public :: GwfNpfType
   public :: npf_cr
@@ -21,7 +21,7 @@ module GwfNpfModule
   public :: condmean
 
   type, extends(NumericalPackageType) :: GwfNpfType
-    
+
     type(GwfIcType), pointer                        :: ic           => null()   ! initial conditions object
     type(Xt3dType), pointer                         :: xt3d         => null()   ! xt3d pointer
     integer(I4B), dimension(:), pointer             :: ibound       => null()   ! pointer to model ibound
@@ -55,7 +55,7 @@ module GwfNpfModule
     real(DP), dimension(:), pointer                 :: angle1       => null()   ! k ellipse rotation in xy plane around z axis (yaw)
     real(DP), dimension(:), pointer                 :: angle2       => null()   ! k ellipse rotation up from xy plane around y axis (pitch)
     real(DP), dimension(:), pointer                 :: angle3       => null()   ! k tensor rotation around x axis (roll)
-    !                                                       
+    !
     real(DP), dimension(:), pointer                 :: wetdry       => null()   ! wetdry array
     real(DP), dimension(:), pointer                 :: sat          => null()   ! saturation (0. to 1.) for each cell
     real(DP), dimension(:), pointer                 :: condsat      => null()   ! saturated conductance (symmetric array)
@@ -91,7 +91,7 @@ module GwfNpfModule
   endtype
 
   contains
-  
+
   subroutine npf_cr(npfobj, name_model, inunit, iout)
 ! ******************************************************************************
 ! npf_cr -- Create a new NPF object
@@ -123,7 +123,7 @@ module GwfNpfModule
     ! -- Return
     return
   end subroutine npf_cr
-  
+
   subroutine npf_df(this, xt3d)
 ! ******************************************************************************
 ! npf_df -- Define
@@ -187,7 +187,7 @@ module GwfNpfModule
     ! -- Return
     return
   end subroutine npf_ac
-  
+
   subroutine npf_mc(this, moffset, nodes, ia, ja, iasln, jasln)
 ! ******************************************************************************
 ! npf_mc -- Map connections and construct iax, jax, and idxglox
@@ -213,7 +213,7 @@ module GwfNpfModule
     ! -- Return
     return
   end subroutine npf_mc
-  
+
   subroutine npf_ar(this, dis, ic, ibound, hnew)
 ! ******************************************************************************
 ! npf_ar -- Allocate and Read
@@ -591,7 +591,7 @@ module GwfNpfModule
       if (this%ibound(n) < 1) cycle
       if (this%icelltype(n) > 0) then
         botm = this%dis%bot(this%ibotnode(n))
-        ! -- only apply Newton-Raphson under-relaxation if 
+        ! -- only apply Newton-Raphson under-relaxation if
         !    solution head is below the bottom of the model
         if (x(n) < botm) then
           inewtonur = 1
@@ -698,7 +698,7 @@ module GwfNpfModule
     integer(I4B) :: ihc
 ! ------------------------------------------------------------------------------
     !
-    ! -- Initialize 
+    ! -- Initialize
     ihc = this%dis%con%ihc(this%dis%con%jas(icon))
     hyn = this%hy_eff(n, m, ihc, ipos=icon)
     hym = this%hy_eff(m, n, ihc, ipos=icon)
@@ -880,7 +880,7 @@ module GwfNpfModule
     call mem_deallocate(this%iangle1)
     call mem_deallocate(this%iangle2)
     call mem_deallocate(this%iangle3)
-    !  
+    !
     ! -- Deallocate arrays
     call mem_deallocate(this%icelltype)
     call mem_deallocate(this%k11)
@@ -990,7 +990,7 @@ module GwfNpfModule
     integer(I4B), intent(in) :: ncells
     integer(I4B), intent(in) :: njas
 ! ------------------------------------------------------------------------------
-    !  
+    !
     call mem_allocate(this%icelltype, ncells, 'ICELLTYPE', trim(this%origin))
     call mem_allocate(this%k11, ncells, 'K11', trim(this%origin))
     call mem_allocate(this%sat, ncells, 'SAT', trim(this%origin))
@@ -1005,7 +1005,7 @@ module GwfNpfModule
     ! -- Return
     return
   end subroutine allocate_arrays
-  
+
   subroutine read_options(this)
 ! ******************************************************************************
 ! read_options -- Read the options
@@ -1038,7 +1038,8 @@ module GwfNpfModule
 ! ------------------------------------------------------------------------------
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr, supportOpenClose=.true.)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, &
+                              supportOpenClose=.true., blockRequired=.false.)
     !
     ! -- parse options block if detected
     if (isfound) then
@@ -1110,9 +1111,9 @@ module GwfNpfModule
                              'MINIMUM SATURATED THICKNESS HAS BEEN SET TO: ',  &
                              this%min_satthk
           !
-          ! -- right now these are options that are only available in the 
+          ! -- right now these are options that are only available in the
           !    development version and are not included in the documentation.
-          !    These options are only available when IDEVELOPMODE in 
+          !    These options are only available when IDEVELOPMODE in
           !    constants module is set to 1
           case ('NO_NEWTON')
             call this%parser%DevOpt()
@@ -1125,7 +1126,7 @@ module GwfNpfModule
             this%iusgnrhc = 1
             write(this%iout, '(4x,a)')                                         &
               'MODFLOW-USG saturation calculation method will be used '
-          
+
           case default
             write(errmsg,'(4x,a,a)')'****ERROR. UNKNOWN NPF OPTION: ',         &
                                      trim(keyword)
@@ -1241,7 +1242,7 @@ module GwfNpfModule
     ! -- Return
     return
   end subroutine rewet_options
-  
+
   subroutine check_options(this)
 ! ******************************************************************************
 ! check_options -- Check for conflicting NPF options
@@ -1309,7 +1310,7 @@ module GwfNpfModule
     ! -- Return
     return
   end subroutine check_options
-  
+
   subroutine read_data(this)
 ! ******************************************************************************
 ! read_data -- read the npf data block
@@ -2083,7 +2084,7 @@ module GwfNpfModule
 !   connection.
 !     n is primary node node number
 !     m is connected node (not used if vg is provided)
-!     ihc is horizontal indicator (0 vertical, 1 horizontal, 2 vertically 
+!     ihc is horizontal indicator (0 vertical, 1 horizontal, 2 vertically
 !       staggered)
 !     ipos_opt is position of connection in ja array
 !     vg is the global unit vector that expresses the direction from which to
@@ -2232,11 +2233,11 @@ module GwfNpfModule
     !    thickness and multiply with saturated conductance
     else
       if (inwtup == 1) then
-        ! -- set flag use to determine if bottom of cells n and m are 
+        ! -- set flag use to determine if bottom of cells n and m are
         !    significantly different
         indk = 0
         if (abs(botm-botn) < DEM2) indk = 1
-        ! -- recalculate saturation if using MODFLOW-USG saturation 
+        ! -- recalculate saturation if using MODFLOW-USG saturation
         !    calculation approach
         if (iusg == 1 .and. indk == 0) then
           if (botm > botn) then
@@ -2252,7 +2253,7 @@ module GwfNpfModule
           sn = sQuadraticSaturation(topn, botn, hn, satomega)
           sm = sQuadraticSaturation(topm, botm, hm, satomega)
         end if
-        
+
         if (hn > hm) then
           condnm = sn
         else
@@ -2323,7 +2324,7 @@ module GwfNpfModule
     ! -- local
     real(DP) :: satntmp, satmtmp
     real(DP) :: bovk1
-    real(DP) :: bovk2    
+    real(DP) :: bovk2
     real(DP) :: denom
 ! ------------------------------------------------------------------------------
    !
@@ -2348,7 +2349,7 @@ module GwfNpfModule
     ! -- todo: upstream weighting?
     else
       !
-      ! -- Default is for CV correction (dewatered option); use underlying 
+      ! -- Default is for CV correction (dewatered option); use underlying
       !    saturation of 1.
       satntmp = satn
       satmtmp = satm
@@ -2441,7 +2442,7 @@ module GwfNpfModule
       endif
       condmean = tmean * width / (cl1 + cl2)
     !
-    ! -- Arithmetic-mean thickness and logarithmic-mean hydraulic conductivity 
+    ! -- Arithmetic-mean thickness and logarithmic-mean hydraulic conductivity
     case(2)
       if (k1*k2 > DZERO) then
         kmean = logmean(k1, k2)
@@ -2450,7 +2451,7 @@ module GwfNpfModule
       endif
       condmean = kmean * DHALF * (thick1 + thick2) * width / (cl1 + cl2)
     !
-    ! -- Arithmetic-mean thickness and harmonic-mean hydraulic conductivity 
+    ! -- Arithmetic-mean thickness and harmonic-mean hydraulic conductivity
     case(3)
       denom = (k1 * cl2 + k2 * cl1)
       if (denom > DZERO) then
@@ -2492,11 +2493,11 @@ module GwfNpfModule
     ! -- Return
     return
   end function logmean
-  
+
   function hyeff_calc(k11, k22, k33, ang1, ang2, ang3, vg1, vg2, vg3)           &
     result(hyeff)
 ! ******************************************************************************
-! hyeff_calc -- Calculate the effective horizontal hydraulic conductivity from 
+! hyeff_calc -- Calculate the effective horizontal hydraulic conductivity from
 !   an ellipse using a specified direction (unit vector vg1, vg2, vg3).
 !   k11 is the hydraulic conductivity of the major ellipse axis
 !   k22 is the hydraulic conductivity of first minor axis
@@ -2505,9 +2506,9 @@ module GwfNpfModule
 !     direction of the connection between cell n and m
 !   a1 is the counter-clockwise rotation (radians) of the ellipse in
 !     the (x, y) plane
-!   a2 is the rotation of the conductivity ellipsoid upward or 
+!   a2 is the rotation of the conductivity ellipsoid upward or
 !     downward from the (x, y) plane
-!   a3 is the rotation of the conductivity ellipsoid about the major 
+!   a3 is the rotation of the conductivity ellipsoid about the major
 !     axis
 ! ******************************************************************************
 !

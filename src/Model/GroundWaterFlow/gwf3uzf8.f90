@@ -2488,6 +2488,7 @@ contains
     real(DP) :: surfdep,vks,thtr,thts,thti,eps,hgwf
     integer(I4B), dimension(:), pointer, contiguous :: rowmaxnnz => null()
     type(sparsematrix), pointer :: sparse => null()
+    integer(I4B), dimension(:), pointer :: nboundchk
 ! ------------------------------------------------------------------------------
 !
     !
@@ -2495,6 +2496,12 @@ contains
     allocate(rowmaxnnz(this%dis%nodes))
     do n = 1, this%dis%nodes
       rowmaxnnz(n) = 0
+    end do
+    !
+    ! -- allocate space for local variables
+    allocate(nboundchk(this%nodes))
+    do n = 1, this%nodes
+      nboundchk(n) = 0
     end do
     !
     ! -- initialize variables
@@ -2514,9 +2521,23 @@ contains
     if (isfound) then
       write(this%iout,'(/1x,a,a)')'PROCESSING '//trim(adjustl(this%text))// &
         ' PACKAGEDATA'
-      do i = 1, this%nodes
+      do
         call this%parser%GetNextLine(endOfBlock)
         if (endOfBlock) exit
+        !
+        ! -- get uzf cell number
+        i = this%parser%GetInteger()
+
+        if (i < 1 .or. i > this%nodes) then
+          write(errmsg,'(4x,a,1x,i6)') &
+            '****ERROR. iuzno MUST BE > 0 and <= ', this%nodes
+          call store_error(errmsg)
+          cycle
+        end if 
+        !
+        ! -- increment nboundchk
+        nboundchk(i) = nboundchk(i) + 1
+        
         ! -- store the reduced gwf nodenumber in mfcellid
         call this%parser%GetCellid(this%dis%ndim, cellid)
         ic = this%dis%noder_from_cellid(cellid,                               &
@@ -2630,33 +2651,22 @@ contains
       call this%uzfobj%setdata(i,this%gwfarea(n),this%gwftop(n),this%gwfbot(n), &
                           surfdep,vks,thtr,thts,thti,eps,this%nwav,this%ntrail, &
                           landflag,ivertcon,hgwf)
-      !
-      ! -- Terminate the block
-      call this%parser%GetNextLine(endOfBlock)
-      if (.not. endOfBlock) then
-        call this%parser%GetCurrentLine(line)
-        write(errmsg, *) "LOOKING FOR 'END PACKAGEDATA' BUT FOUND " // trim(line)
-        call store_error(errmsg)
-        call this%parser%StoreErrorUnit()
-        call ustop()
-      endif
     else
-      write(errmsg,'(4x,a)') &
-            '****ERROR. UZFCELL DATA NOT SPECIFIED '
-      call store_error(errmsg)
-      call this%parser%StoreErrorUnit()
-      call ustop()
+      call store_error('ERROR.  REQUIRED PACKAGEDATA BLOCK NOT FOUND.')
     end if
     !
-    ! check that all uzf cells were assigned data (+1 for end data)
-    if ( i < this%nodes+1 ) then
-       write(errmsg,'(4x,a,1x,i6,a)') &
-                '****ERROR. DATA FOR ALL UZF CELLS IS REQUIRED. DATA ' // &
-                'SPECIFIED FOR : ', i, ' CELLS'
-       call store_error(errmsg)
-       call this%parser%StoreErrorUnit()
-       call ustop()
-    end if
+    ! -- check for duplicate or missing lakes
+    do i = 1, this%nodes
+      if (nboundchk(i) == 0) then
+        write(errmsg,'(a,1x,i0)')                                             &
+          'ERROR.  NO DATA SPECIFIED FOR UZF CELL', i
+        call store_error(errmsg)
+      else if (nboundchk(i) > 1) then
+        write(errmsg,'(a,1x,i0,1x,a,1x,i0,1x,a)')                             &
+          'ERROR.  DATA FOR UZF CELL', i, 'SPECIFIED', nboundchk(i), 'TIMES'
+        call store_error(errmsg)
+      end if
+    end do
     !
     ! -- write summary of UZF cell property error messages
     ierr = count_errors()
@@ -2699,6 +2709,7 @@ contains
     ! -- deallocate local variables
     deallocate(sparse)
     deallocate(rowmaxnnz)
+    deallocate(nboundchk)
     !
     ! -- return
     return

@@ -6,13 +6,13 @@ module GwfHfbModule
   use NumericalPackageModule, only: NumericalPackageType
   use BlockParserModule,      only: BlockParserType
   use BaseDisModule,          only: DisBaseType
-  
+
   implicit none
-  
+
   private
   public :: GwfHfbType
   public :: hfb_cr
-  
+
   type, extends(NumericalPackageType) :: GwfHfbType
     integer(I4B), pointer                        :: maxhfb     => null()   !max number of hfb's
     integer(I4B), pointer                        :: nhfb       => null()   !number of hfb's
@@ -53,9 +53,9 @@ module GwfHfbModule
     procedure, private :: condsat_reset
     procedure, private :: condsat_modify
   end type GwfHfbType
-  
+
   contains
-  
+
   subroutine hfb_cr(hfbobj, name_model, inunit, iout)
 ! ******************************************************************************
 ! hfb_cr -- Create a new hfb object
@@ -135,7 +135,7 @@ module GwfHfbModule
     ! -- return
     return
   end subroutine hfb_ar
-  
+
   subroutine hfb_rp(this)
 ! ******************************************************************************
 ! hfb_rp -- Check for new hfb stress period data
@@ -353,7 +353,7 @@ module GwfHfbModule
     ! -- return
     return
   end subroutine hfb_fc
-  
+
   subroutine hfb_flowja(this, nodes, nja, hnew, flowja)
 ! ******************************************************************************
 ! hfb_flowja -- flowja will automatically include the effects of the hfb
@@ -452,7 +452,7 @@ module GwfHfbModule
     ! -- return
     return
   end subroutine hfb_flowja
-  
+
   subroutine hfb_da(this)
 ! ******************************************************************************
 ! hfb_da -- Deallocate
@@ -506,7 +506,7 @@ module GwfHfbModule
     ! -- return
     return
   end subroutine hfb_da
-  
+
   subroutine allocate_scalars(this)
 ! ******************************************************************************
 ! allocate_scalars -- Allocate scalars
@@ -540,7 +540,7 @@ module GwfHfbModule
     ! -- return
     return
   end subroutine allocate_scalars
-  
+
   subroutine allocate_arrays(this)
 ! ******************************************************************************
 ! allocate_arrays -- Allocate arrays
@@ -571,7 +571,7 @@ module GwfHfbModule
     ! -- return
     return
   end subroutine allocate_arrays
-  
+
   subroutine read_options(this)
 ! ******************************************************************************
 ! read_options -- read a hfb options block
@@ -591,7 +591,7 @@ module GwfHfbModule
 ! ------------------------------------------------------------------------------
     !
     ! -- get options block
-    call this%parser%GetBlock('OPTIONS', isfound, ierr)
+    call this%parser%GetBlock('OPTIONS', isfound, ierr, blockRequired=.false.)
     !
     ! -- parse options block if detected
     if (isfound) then
@@ -619,7 +619,7 @@ module GwfHfbModule
     ! -- return
     return
   end subroutine read_options
-  
+
   subroutine read_dimensions(this)
 ! ******************************************************************************
 ! read_dimensions -- Read the dimensions for this package
@@ -681,7 +681,7 @@ module GwfHfbModule
     ! -- return
     return
   end subroutine read_dimensions
-  
+
   subroutine read_data(this)
 ! ******************************************************************************
 ! read_data -- Read hfb period block
@@ -762,7 +762,7 @@ module GwfHfbModule
     ! -- return
     return
   end subroutine read_data
-  
+
   subroutine check_data(this)
 ! ******************************************************************************
 ! check_data -- Check for hfb's between two unconnected cells and write a

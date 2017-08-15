@@ -40,7 +40,7 @@
   character(len=LENDATETIME), pointer          :: datetime0                     !starting date and time for the simulation
   !
   type(BlockParserType), private :: parser
-  
+
   contains
 
   subroutine tdis_cr(fname)
@@ -267,8 +267,8 @@
     ! -- Scalars
     call mem_deallocate(nper)
     call mem_deallocate(itmuni)
-    call mem_deallocate(kper) 
-    call mem_deallocate(kstp)    
+    call mem_deallocate(kper)
+    call mem_deallocate(kstp)
     call mem_deallocate(readnewdata)
     call mem_deallocate(endofperiod)
     call mem_deallocate(endofsimulation)
@@ -322,7 +322,7 @@
     undspec = .false.
     !
     ! -- get options block
-    call parser%GetBlock('OPTIONS', isfound, ierr)
+    call parser%GetBlock('OPTIONS', isfound, ierr, blockRequired=.false.)
     !
     ! -- parse options block if detected
     if (isfound) then
@@ -401,17 +401,17 @@
     ! -- memory manager variables
     call mem_allocate(nper, 'NPER', 'TDIS')
     call mem_allocate(itmuni, 'ITMUNI', 'TDIS')
-    call mem_allocate(kper, 'KPER', 'TDIS') 
-    call mem_allocate(kstp, 'KSTP', 'TDIS')    
+    call mem_allocate(kper, 'KPER', 'TDIS')
+    call mem_allocate(kstp, 'KSTP', 'TDIS')
     call mem_allocate(readnewdata, 'READNEWDATA', 'TDIS')
     call mem_allocate(endofperiod, 'ENDOFPERIOD', 'TDIS')
     call mem_allocate(endofsimulation, 'ENDOFSIMULATION', 'TDIS')
     call mem_allocate(delt, 'DELT', 'TDIS')
-    call mem_allocate(pertim, 'PERTIM', 'TDIS')    
-    call mem_allocate(totim, 'TOTIM', 'TDIS')  
-    call mem_allocate(totimc, 'TOTIMC', 'TDIS')   
-    call mem_allocate(deltsav, 'DELTSAV', 'TDIS')  
-    call mem_allocate(totimsav, 'TOTIMSAV', 'TDIS') 
+    call mem_allocate(pertim, 'PERTIM', 'TDIS')
+    call mem_allocate(totim, 'TOTIM', 'TDIS')
+    call mem_allocate(totimc, 'TOTIMC', 'TDIS')
+    call mem_allocate(deltsav, 'DELTSAV', 'TDIS')
+    call mem_allocate(totimsav, 'TOTIMSAV', 'TDIS')
     call mem_allocate(pertimsav, 'PERTIMSAV', 'TDIS')
     call mem_allocate(totalsimtime, 'TOTALSIMTIME', 'TDIS')
     !
@@ -440,7 +440,7 @@
     return
   end subroutine tdis_allocate_scalars
 
-  
+
   subroutine tdis_allocate_arrays()
 ! ******************************************************************************
 ! tdis_allocate_arrays -- Allocate tdis arrays
@@ -459,7 +459,7 @@
     ! -- return
     return
   end subroutine tdis_allocate_arrays
-  
+
   subroutine tdis_read_dimensions()
 ! ******************************************************************************
 ! tdis_read_dimensions -- Read dimension NPER

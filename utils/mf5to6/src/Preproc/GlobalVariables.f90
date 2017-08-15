@@ -1,6 +1,6 @@
 module GlobalVariablesModule
   
-  use ConstantsModule, only: MAXCHARLEN
+  use ConstantsModule, only: MAXCHARLEN, VERSION
   use OpenSpecModule,  only: ACCESS, ACTION, FORM
 
   implicit none
@@ -14,8 +14,8 @@ module GlobalVariablesModule
   character(len=60) :: prognamconv, prognamlong
   character(len=40) :: mfvnam
   parameter (prognamconv='Mf5to6')
-  parameter (prognamlong=trim(prognamconv)//' - Converter for MODFLOW-2005 to MODFLOW 6')
-  parameter (mfvnam='version 0.9.03 - 6/23/2017')
+  parameter (prognamlong=trim(prognamconv)//' - Converter for MODFLOW (2005, NWT, LGR) to MODFLOW 6')
+  parameter (mfvnam='Version ' // VERSION)
   integer  :: ngrid = 0
   integer  :: ilgr, ilunit, ngrids
   integer, parameter :: NIUNIT=100
