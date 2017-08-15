@@ -1,4 +1,15 @@
 language: fortran
+os:
+  - linux
+  - osx
+compiler: 
+  - gcc
+env:
+  - CVER=gfortran4
+  - CVER=gfortran5
+  - CVER=gfortran6
+  - CVER=gfortran7
+  
 matrix:
   include:
     - os: linux
@@ -28,7 +39,7 @@ matrix:
             - tex-common
             - latex-xcolor
       env: 
-        - CVER="gfortran5"
+        - CVER=gfortran5
 
     - os: linux
       dist: trusty
@@ -57,7 +68,7 @@ matrix:
             - tex-common
             - latex-xcolor
       env: 
-        - CVER="gfortran6"
+        - CVER=gfortran6
 
     - os: linux
       dist: trusty
@@ -86,7 +97,7 @@ matrix:
             - tex-common
             - latex-xcolor
       env: 
-        - CVER="gfortran7"
+        - CVER=gfortran7
 
     - os: linux
       dist: trusty
@@ -115,7 +126,7 @@ matrix:
             - tex-common
             - latex-xcolor
       env: 
-        - CVER="gfortran4"
+        - CVER=gfortran4
 
     - os: osx
       dist: trusty
@@ -123,7 +134,7 @@ matrix:
       osx_image: xcode7.3
       compiler: gcc
       env: 
-        - CVER="gfortran5"
+        - CVER=gfortran5
 ##        - COMPILER=gfortran-5
 ##        - CXX_COMPILER='g++-5'
 ##        - C_COMPILER='gcc-5'
@@ -132,7 +143,7 @@ matrix:
 
   allow_failures:
     - os: osx
-    - env: CVER="gfortran7"
+    - env: CVER=gfortran7
 
 
 install:
