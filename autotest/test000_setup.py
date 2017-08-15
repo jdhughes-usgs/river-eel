@@ -318,7 +318,7 @@ def build(srcdir, srcdir2, target, starget, extrafiles=None):
 
 
 if __name__ == "__main__":
-    test_create_testdirs()
+    test_create_dirs()
     test_build_modflow()
     test_build_mfnwt()
     test_build_usg()

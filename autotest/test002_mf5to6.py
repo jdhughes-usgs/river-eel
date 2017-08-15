@@ -50,6 +50,65 @@ def get_mf5to6_models():
             if 'test' in d and d not in exclude]
     # sort in numerical order for case sensitive os
     dirs = sorted(dirs, key=lambda v: (v.upper(), v[0].islower()))
+
+    # determine if only a selection of models should be run
+    select_dirs = None
+    select_packages = None
+    for idx, arg in enumerate(sys.argv):
+        if arg.lower() == '--sim':
+            if len(sys.argv) > idx + 1:
+                select_dirs = sys.argv[idx + 1:]
+                break
+        elif arg.lower() == '--pak':
+            if len(sys.argv) > idx + 1:
+                select_packages = sys.argv[idx + 1:]
+                select_packages = [item.upper() for item in
+                                   select_packages]
+                break
+
+    # determine if the selection of model is in the test models to evaluate
+    if select_dirs is not None:
+        found_dirs = []
+        for d in select_dirs:
+            if d in dirs:
+                found_dirs.append(d)
+        dirs = found_dirs
+        if len(dirs) < 1:
+            msg = 'Selected models not available in test'
+            print(msg)
+
+    # determine if the specified package(s) is in the test models to evaluate
+    if select_packages is not None:
+        found_dirs = []
+        for d in dirs:
+            pth = os.path.join(exdir, d)
+            namefiles = pymake.get_namefiles(pth)
+            ftypes = []
+            for namefile in namefiles:
+                for pak in select_packages:
+                    ftype = pymake.autotest.get_entries_from_namefile(namefile,
+                                                                      ftype=pak)
+                    for t in ftype:
+                        if t[1] is not None:
+                            if t[1] not in ftypes:
+                                ftypes.append(t[1].upper())
+            if len(ftypes) > 0:
+                ftypes = [item.upper() for item in ftypes]
+                for pak in select_packages:
+                    if pak in ftypes:
+                        found_dirs.append(d)
+                        break
+        dirs = found_dirs
+        if len(dirs) < 1:
+            msg = 'Selected packages not available ['
+            for idx, pak in enumerate(select_packages):
+                msg += '{}'.format(pak)
+                if idx + 1 < len(select_packages):
+                    msg += ', '
+            msg += ']'
+            print(msg)
+
+
     return dirs
 
 
@@ -172,63 +231,6 @@ def run_mf5to6(sim):
 def test_model():
     # get a list of test models to run
     dirs = get_mf5to6_models()
-
-    # determine if only a selection of models should be run
-    select_dirs = None
-    select_packages = None
-    for idx, arg in enumerate(sys.argv):
-        if arg.lower() == '--sim':
-            if len(sys.argv) > idx + 1:
-                select_dirs = sys.argv[idx + 1:]
-                break
-        elif arg.lower() == '--pak':
-            if len(sys.argv) > idx + 1:
-                select_packages = sys.argv[idx + 1:]
-                select_packages = [item.upper() for item in
-                                   select_packages]
-                break
-
-    # determine if the selection of model is in the test models to evaluate
-    if select_dirs is not None:
-        found_dirs = []
-        for d in select_dirs:
-            if d in dirs:
-                found_dirs.append(d)
-        dirs = found_dirs
-        if len(dirs) < 1:
-            msg = 'Selected models not available in test'
-            print(msg)
-
-    # determine if the specified package(s) is in the test models to evaluate
-    if select_packages is not None:
-        found_dirs = []
-        for d in dirs:
-            pth = os.path.join(exdir, d)
-            namefiles = pymake.get_namefiles(pth)
-            ftypes = []
-            for namefile in namefiles:
-                for pak in select_packages:
-                    ftype = pymake.autotest.get_entries_from_namefile(namefile,
-                                                                      ftype=pak)
-                    for t in ftype:
-                        if t[1] is not None:
-                            if t[1] not in ftypes:
-                                ftypes.append(t[1].upper())
-            if len(ftypes) > 0:
-                ftypes = [item.upper() for item in ftypes]
-                for pak in select_packages:
-                    if pak in ftypes:
-                        found_dirs.append(d)
-                        break
-        dirs = found_dirs
-        if len(dirs) < 1:
-            msg = 'Selected packages not available ['
-            for idx, pak in enumerate(select_packages):
-                msg += '{}'.format(pak)
-                if idx + 1 < len(select_packages):
-                    msg += ', '
-            msg += ']'
-            print(msg)
 
     # run the test models
     for dir in dirs:
