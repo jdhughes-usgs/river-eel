@@ -9,22 +9,6 @@ cache:
   directories:
     - $HOME/.cache/pip
     - $HOME/.local
-addons:
-  apt:
-    sources: 
-      - ubuntu-toolchain-r-test
-    packages: 
-      - gfortran-4.9
-      - texlive-base
-      - texlive-latex-base
-      - texlive-latex-extra
-      - texlive-latex-recommended
-      - texlive-science
-      - texlive-fonts-recommended
-      - texlive-fonts-extra
-      - dpkg
-      - tex-common
-      - latex-xcolor
       
 matrix:
   include:
@@ -35,6 +19,16 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-4.9
+            - texlive-base
+            - texlive-latex-base
+            - texlive-latex-extra
+            - texlive-latex-recommended
+            - texlive-science
+            - texlive-fonts-recommended
+            - texlive-fonts-extra
+            - dpkg
+            - tex-common
+            - latex-xcolor
 
     - env: CVER=gfortran5
       addons:
@@ -43,6 +37,16 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-5
+            - texlive-base
+            - texlive-latex-base
+            - texlive-latex-extra
+            - texlive-latex-recommended
+            - texlive-science
+            - texlive-fonts-recommended
+            - texlive-fonts-extra
+            - dpkg
+            - tex-common
+            - latex-xcolor
 
     - env: CVER=gfortran6
       addons:
@@ -51,24 +55,42 @@ matrix:
             - ubuntu-toolchain-r-test
           packages: 
             - gfortran-6
+            - texlive-base
+            - texlive-latex-base
+            - texlive-latex-extra
+            - texlive-latex-recommended
+            - texlive-science
+            - texlive-fonts-recommended
+            - texlive-fonts-extra
+            - dpkg
+            - tex-common
+            - latex-xcolor
 
-    allow_failures:
-      - env: CVER=gfortran7
-        addons:
-          apt:
-            sources: 
-              - ubuntu-toolchain-r-test
-            packages: 
-              - gfortran-7
+    - env: CVER=gfortran7
+      addons:
+        apt:
+          sources: 
+            - ubuntu-toolchain-r-test
+          packages: 
+            - gfortran-7
+            - texlive-base
+            - texlive-latex-base
+            - texlive-latex-extra
+            - texlive-latex-recommended
+            - texlive-science
+            - texlive-fonts-recommended
+            - texlive-fonts-extra
+            - dpkg
+            - tex-common
+            - latex-xcolor
      
+  allow_failures:
+    - env: CVER=gfortran7
      
 
 
 
 install:
-    - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-        brew install gcc;
-      fi
     - if [[ ! -d "$HOME/.local/bin" ]]; then
         mkdir "$HOME/.local/bin";
       fi
@@ -96,9 +118,6 @@ install:
     # install anaconda
     - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
         wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-      fi
-    - if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-        wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
       fi
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
