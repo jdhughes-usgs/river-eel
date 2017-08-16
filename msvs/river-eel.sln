@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "mf6", "mf6.vfproj", "{369C1E2E-A513-4E83-A076-923534E30304}"
+Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "mf6", "river-eel.vfproj", "{369C1E2E-A513-4E83-A076-923534E30304}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
