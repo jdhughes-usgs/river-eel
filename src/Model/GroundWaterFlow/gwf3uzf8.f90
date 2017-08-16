@@ -2713,15 +2713,15 @@ contains
     ! -- dummy
     class(UzfType) :: this
     ! -- local
-    character(len=LINELENGTH) :: line, errmsg, cellid
-    integer(I4B) :: ierr, i, n, landflag, ivertcon
-    integer(I4B) :: j
-    integer(I4B) :: ic
-    logical :: isfound, endOfBlock
-    real(DP) :: surfdep,vks,thtr,thts,thti,eps,hgwf
-    integer(I4B), dimension(:), allocatable :: rowmaxnnz
-    type(sparsematrix) :: sparse
-    integer(I4B), dimension(:), allocatable :: nboundchk
+    !character(len=LINELENGTH) :: line, errmsg, cellid
+    !integer(I4B) :: ierr, i, n, landflag, ivertcon
+    !integer(I4B) :: j
+    !integer(I4B) :: ic
+    !logical :: isfound, endOfBlock
+    !real(DP) :: surfdep,vks,thtr,thts,thti,eps,hgwf
+    !integer(I4B), dimension(:), allocatable :: rowmaxnnz
+    !type(sparsematrix) :: sparse
+    !integer(I4B), dimension(:), allocatable :: nboundchk
 ! ------------------------------------------------------------------------------
 !
     !!
@@ -3240,9 +3240,9 @@ contains
     !    SPECIFICATIONS:
     ! --------------------------------------------------------------------------
     ! -- dummy
-    class(UzfType), intent(inout) :: this
+    class(UzfType) :: this
     ! -- local
-    integer(I4B) :: i, ii, n
+    integer(I4B) :: i, ii, n, nn
     real(DP) :: v
     character(len=100) :: msg
     type(ObserveType), pointer :: obsrv => null()
@@ -3253,7 +3253,8 @@ contains
       call this%obs%obs_bd_clear()
       do i = 1, this%obs%npakobs
         obsrv => this%obs%pakobs(i)%obsrv
-        do ii = 1, size(obsrv%indxbnds)
+        nn = size(obsrv%indxbnds)
+        do ii = 1, nn
           n = obsrv%indxbnds(ii)
           v = DNODATA
           select case (obsrv%ObsTypeId)
@@ -3313,11 +3314,16 @@ contains
             case default
               msg = 'Error: Unrecognized observation type: ' // trim(obsrv%ObsTypeId)
               call store_error(msg)
-              call ustop()
           end select
           call this%obs%SaveOneSimval(obsrv, v)
         end do
       end do
+    end if
+    !
+    ! -- write summary of package block error messages
+    if (count_errors() > 0) then
+      call this%parser%StoreErrorUnit()
+      call ustop()
     end if
     !
     return
