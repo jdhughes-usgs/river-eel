@@ -25,23 +25,23 @@ module UzfModule
   use BlockParserModule, only: BlockParserType
 
   implicit none
+  !
+  character(len=LENFTYPE)       :: ftype = 'UZF'
+  character(len=LENPACKAGENAME) :: text  = '       UZF CELLS' 
+  !
+  !integer(I4B), parameter              :: nbdtxt = 5                             !number of budget items
+  !character(len=LENBUDTXT), dimension(nbdtxt) :: bdtxt = ['         UZF-INF',   & !budget items written to cbc file
+  !                                                        '       UZF-GWRCH',   &
+  !                                                        '         UZF-GWD',   &
+  !                                                        '        UZF-GWET',   &
+  !                                                        '  UZF-GWD TO-MVR']
+  !
+  type uzfcontainer
+    class(UzfKinematicType), pointer :: obj
+  end type uzfcontainer
 
   private
   public :: uzf_create
-  public :: UzfType
-  !
-  integer(I4B), parameter              :: nbdtxt = 5                             !number of budget items
-  character(len=LENFTYPE)              :: ftype = 'UZF'                          !package ftype
-  character(len=LENPACKAGENAME)        :: text  = '       UZF CELLS'              !long name for package
-  character(len=LENBUDTXT), dimension(nbdtxt) :: bdtxt = ['         UZF-INF',   & !budget items written to cbc file
-                                                          '       UZF-GWRCH',   &
-                                                          '         UZF-GWD',   &
-                                                          '        UZF-GWET',   &
-                                                          '  UZF-GWD TO-MVR']
-  !
-  type container
-    class(UzfKinematicType), pointer :: obj
-  end type container
 
   type, extends(BndType) :: UzfType
     ! output integers
@@ -51,10 +51,12 @@ module UzfModule
     !
     type(BudgetType), pointer                          :: budget      => null() !budget object
     integer(I4B), pointer                              :: bditems     => null() !number of budget items
+    integer(I4B), pointer                              :: nbdtxt      => null() !number of budget text items
+    character(len=LENBUDTXT), dimension(:), pointer    :: bdtxt       => null() !budget items written to cbc file
     type(UzfKinematicType), pointer                    :: uzfobj      => null() !uzf kinematic object
     type(UzfKinematicType), pointer                    :: uzfobjwork  => null() !uzf kinematic work object
     type(UzfKinematicType), pointer                    :: uzfobjbelow => null() !uzf kinematic object of underlying cell
-    type(container), pointer, dimension(:)             :: elements    => null() !array of all the kinematic uzf objects
+    type(uzfcontainer), pointer, dimension(:)          :: elements    => null() !array of all the kinematic uzf objects
     character(len=72), pointer                         :: nameuzf     => null() !cdl--(not sure.  Delete?)
     !
     ! -- pointer to gwf variables
@@ -610,7 +612,15 @@ contains
       end do
     end do
     !
-    ! -- allocate character array for budget text
+    ! -- allocate and initialize character array for budget text
+    allocate(this%bdtxt(this%nbdtxt))
+    this%bdtxt(1) = '         UZF-INF'
+    this%bdtxt(2) = '       UZF-GWRCH'
+    this%bdtxt(3) = '         UZF-GWD'
+    this%bdtxt(4) = '        UZF-GWET'
+    this%bdtxt(5) = '  UZF-GWD TO-MVR'
+    !
+    ! -- allocate character array for aux budget text
     allocate(this%cauxcbc(this%cbcauxitems))
     !
     ! -- allocate and initialize qauxcbc
@@ -1816,7 +1826,7 @@ contains
       ! -- uzf-gwrch
       ibdlbl = 0
       if (ibinun /= 0) then
-        call this%dis%record_srcdst_list_header(bdtxt(2), this%name_model,  &
+        call this%dis%record_srcdst_list_header(this%bdtxt(2), this%name_model, &
                     this%name_model, this%name_model, this%name, naux,          &
                     this%auxname, ibinun, this%nodes, this%iout)
       end if
@@ -1842,7 +1852,7 @@ contains
           ! -- Print the individual rates if requested(this%iprflow<0)
           if (ibudfl /= 0) then
             if (this%iprflow /= 0) then
-              if (ibdlbl == 0) write(this%iout,fmttkk) bdtxt(2), kper, kstp
+              if (ibdlbl == 0) write(this%iout,fmttkk) this%bdtxt(2), kper, kstp
               call this%dis%print_list_entry(i, node, rrate, this%iout,     &
                       bname)
               ibdlbl=1
@@ -1853,7 +1863,7 @@ contains
         ! -- If saving cell-by-cell flows in list, write flow
         if (ibinun /= 0) then
           n2 = i
-          call this%dis%record_mf6_list_entry(ibinun, node, n2, rrate,      &
+          call this%dis%record_mf6_list_entry(ibinun, node, n2, rrate,          &
                                                   naux, this%auxvar(:,i),       &
                                                   olconv2=.FALSE.)
         end if
@@ -1863,8 +1873,8 @@ contains
       if (this%iseepflag == 1) then
         ibdlbl = 0
         if (ibinun /= 0) then
-          call this%dis%record_srcdst_list_header(bdtxt(3), this%name_model,&
-                      this%name_model, this%name_model, this%name, naux,        &
+          call this%dis%record_srcdst_list_header(this%bdtxt(3), this%name_model,&
+                      this%name_model, this%name_model, this%name, naux,         &
                       this%auxname, ibinun, this%nodes, this%iout)
         end if
         !
@@ -1888,7 +1898,7 @@ contains
             ! -- Print the individual rates if requested(this%iprflow<0)
             if (ibudfl /= 0) then
               if (this%iprflow /= 0) then
-                if (ibdlbl == 0) write(this%iout,fmttkk) bdtxt(3), kper, kstp
+                if (ibdlbl == 0) write(this%iout,fmttkk) this%bdtxt(3), kper, kstp
                 call this%dis%print_list_entry(i, node, rrate, this%iout, &
                         bname)
                 ibdlbl=1
@@ -1909,7 +1919,7 @@ contains
         if (this%imover == 1) then
           ibdlbl = 0
           if (ibinun /= 0) then
-            call this%dis%record_srcdst_list_header(bdtxt(5),               &
+            call this%dis%record_srcdst_list_header(this%bdtxt(5),              &
                         this%name_model, this%name_model,                       &
                         this%name_model, this%name, naux,                       &
                         this%auxname, ibinun, this%nodes, this%iout)
@@ -1935,7 +1945,7 @@ contains
               ! -- Print the individual rates if requested(this%iprflow<0)
               if (ibudfl /= 0) then
                 if (this%iprflow /= 0) then
-                  if (ibdlbl == 0) write(this%iout,fmttkk) bdtxt(5), kper, kstp
+                  if (ibdlbl == 0) write(this%iout,fmttkk) this%bdtxt(5), kper, kstp
                   call this%dis%print_list_entry(i, node, rrate, this%iout, &
                           bname)
                   ibdlbl=1
@@ -1957,7 +1967,7 @@ contains
       if (this%ietflag /= 0) then
         ibdlbl = 0
         if (ibinun /= 0) then
-          call this%dis%record_srcdst_list_header(bdtxt(4), this%name_model,&
+          call this%dis%record_srcdst_list_header(this%bdtxt(4), this%name_model,&
                       this%name_model, this%name_model, this%name, naux,        &
                       this%auxname, ibinun, this%nodes, this%iout)
         end if
@@ -1982,7 +1992,7 @@ contains
             ! -- Print the individual rates if requested(this%iprflow<0)
             if (ibudfl /= 0) then
               if (this%iprflow /= 0) then
-                if (ibdlbl == 0) write(this%iout,fmttkk) bdtxt(4), kper, kstp
+                if (ibdlbl == 0) write(this%iout,fmttkk) this%bdtxt(4), kper, kstp
                 call this%dis%print_list_entry(i, node, rrate, this%iout, &
                         bname)
                 ibdlbl=1
@@ -2005,19 +2015,19 @@ contains
     !uzf recharge
     ratin = rrech
     ratout = DZERO
-    call model_budget%addentry(ratin, ratout, delt, bdtxt(2),                   &
+    call model_budget%addentry(ratin, ratout, delt, this%bdtxt(2),                   &
                                isuppress_output, this%name)
     !groundwater discharge
     if (this%iseepflag == 1) then
       ratin = DZERO
       ratout = qseep !rgwseep
-      call model_budget%addentry(ratin, ratout, delt, bdtxt(3),                 &
+      call model_budget%addentry(ratin, ratout, delt, this%bdtxt(3),                 &
                                  isuppress_output, this%name)
       !groundwater discharge to mover
       if (this%imover == 1) then
         ratin = DZERO
         ratout = qseeptomvr
-        call model_budget%addentry(ratin, ratout, delt, bdtxt(5),               &
+        call model_budget%addentry(ratin, ratout, delt, this%bdtxt(5),               &
                                    isuppress_output, this%name)
       end if
     end if
@@ -2029,7 +2039,7 @@ contains
       !if (retgw > DZERO) then
       !  ratout = -retgw
       !end if
-      call model_budget%addentry(ratin, ratout, delt, bdtxt(4),                 &
+      call model_budget%addentry(ratin, ratout, delt, this%bdtxt(4),                 &
                                  isuppress_output, this%name)
     end if
     !
@@ -3544,6 +3554,7 @@ contains
     call mem_allocate(this%vfluxsum, 'VFLUXSUM', this%origin)
     call mem_allocate(this%delstorsum, 'DELSTORSUM', this%origin)
     call mem_allocate(this%bditems, 'BDITEMS', this%origin)
+    call mem_allocate(this%nbdtxt, 'NBDTXT', this%origin)
     call mem_allocate(this%issflag, 'ISSFLAG', this%origin)
     call mem_allocate(this%issflagold, 'ISSFLAGOLD', this%origin)
     call mem_allocate(this%readflag, 'READFLAG', this%origin)
@@ -3568,6 +3579,7 @@ contains
     this%vfluxsum = DZERO
     this%istocb = 0
     this%bditems = 7
+    this%nbdtxt = 5
     this%issflag = 0
     this%issflagold = 0
     this%ietflag = 0
@@ -3617,6 +3629,7 @@ contains
     deallocate(this%budget)
     !
     ! -- character arrays
+    deallocate(this%bdtxt)
     deallocate(this%cauxcbc)
     !
     ! -- deallocate scalars
@@ -3636,6 +3649,7 @@ contains
     call mem_deallocate(this%vfluxsum)
     call mem_deallocate(this%delstorsum)
     call mem_deallocate(this%bditems)
+    call mem_deallocate(this%nbdtxt)
     call mem_deallocate(this%issflag)
     call mem_deallocate(this%issflagold)
     call mem_deallocate(this%readflag)
