@@ -1762,7 +1762,7 @@ contains
     !
     ! -- For continuous observations, save simulated values.
     if (this%obs%npakobs > 0 .and. iprobs > 0) then
-      call this%uzf_bd_obs()
+      call this%uzf_bd_obs
     endif
     !
     ! add cumulative flows to UZF budget
