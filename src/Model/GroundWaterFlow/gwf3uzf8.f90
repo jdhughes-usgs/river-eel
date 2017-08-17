@@ -164,8 +164,8 @@ module UzfModule
     !
     ! -- methods specific for uzf
     procedure, private :: uzf_solve
-    procedure, private :: pakdata_rd
-    procedure, private :: pakdata_pr
+    procedure, private :: read_cell_properties
+    procedure, private :: print_cell_properties
     procedure, private :: uzcelloutput
     procedure, private :: findcellabove
     procedure, private :: check_cell_area
@@ -237,15 +237,6 @@ contains
     class(UzfType), intent(inout) :: this
     ! -- local
     integer(I4B) :: i, n
-    !character(len=LINELENGTH) :: line, errmsg, cellid
-    !integer(I4B) :: ierr, landflag, ivertcon
-    !integer(I4B) :: j
-    !integer(I4B) :: ic
-    !logical :: isfound, endOfBlock
-    !real(DP) :: surfdep,vks,thtr,thts,thti,eps,hgwf
-    !integer(I4B), dimension(:), allocatable :: rowmaxnnz
-    !type(sparsematrix) :: sparse
-    !integer(I4B), dimension(:), allocatable :: nboundchk
 ! ------------------------------------------------------------------------------
     !
     ! -- Obs ar
@@ -275,226 +266,11 @@ contains
     call mem_setptr(this%gwfiss, 'ISS', trim(this%name_model))
 !
 !   --Read uzf cell properties and set values
-    call this%pakdata_rd()
-    !!
-    !! -- allocate space for node counter and initilize
-    !allocate(rowmaxnnz(this%dis%nodes))
-    !do n = 1, this%dis%nodes
-    !  rowmaxnnz(n) = 0
-    !end do
-    !!
-    !! -- allocate space for local variables
-    !allocate(nboundchk(this%nodes))
-    !do n = 1, this%nodes
-    !  nboundchk(n) = 0
-    !end do
-    !!
-    !! -- initialize variables
-    !surfdep = DZERO
-    !vks = DZERO
-    !thtr = DZERO
-    !thts = DZERO
-    !thti = DZERO
-    !eps = DZERO
-    !landflag = 0
-    !ivertcon = 0
-    !!
-    !! -- get uzf properties block
-    !call this%parser%GetBlock('PACKAGEDATA', isfound, ierr, supportOpenClose=.true.)
-    !!
-    !! -- parse locations block if detected
-    !if (isfound) then
-    !  write(this%iout,'(/1x,3a)') 'PROCESSING ', trim(adjustl(this%text)),      &
-    !                              ' PACKAGEDATA'
-    !  do
-    !    call this%parser%GetNextLine(endOfBlock)
-    !    if (endOfBlock) exit
-    !    !
-    !    ! -- get uzf cell number
-    !    i = this%parser%GetInteger()
-    !
-    !    if (i < 1 .or. i > this%nodes) then
-    !      write(errmsg,'(4x,a,1x,i6)') &
-    !        '****ERROR. iuzno MUST BE > 0 and <= ', this%nodes
-    !      call store_error(errmsg)
-    !      cycle
-    !    end if 
-    !    !
-    !    ! -- increment nboundchk
-    !    nboundchk(i) = nboundchk(i) + 1
-    !    
-    !    ! -- store the reduced gwf nodenumber in mfcellid
-    !    call this%parser%GetCellid(this%dis%ndim, cellid)
-    !    ic = this%dis%noder_from_cellid(cellid,                                 &
-    !                                    this%parser%iuactive, this%iout)
-    !    this%mfcellid(i) = ic
-    !    rowmaxnnz(ic) = rowmaxnnz(ic) + 1
-    !    !
-    !    ! -- landflag
-    !    landflag = this%parser%GetInteger()
-    !    if (landflag < 0 .OR. landflag > 1) then
-    !      write(errmsg,'(4x,a,1x,i0,1x,a,1x,i0)') &
-    !        '****ERROR. LANDFLAG FOR UZF CELL', i,                              &
-    !        'MUST BE 0 or 1 - SPECIFIED VALUE =', landflag
-    !      call store_error(errmsg)
-    !    end if
-    !    !
-    !    ! -- ivertcon
-    !    ivertcon = this%parser%GetInteger()
-    !    if (ivertcon < 0 .OR. ivertcon > this%nodes) then
-    !      write(errmsg,'(4x,a,1x,i0,1x,a,1x,i0)')                                          &
-    !        '****ERROR. IVERTCON FOR UZF CELL', i,                                         &
-    !        'MUST BE 0 or less than NUZFCELLS - SPECIFIED VALUE =', ivertcon
-    !      call store_error(errmsg)
-    !      ivertcon = 0
-    !    end if
-    !    !
-    !    ! -- surfdep
-    !    surfdep =  this%parser%GetDouble()
-    !    if (surfdep <= DZERO) then   !need to check for cell thickness
-    !      write(errmsg,'(4x,a,1x,i0,1x,a,1x,g0)')                                          &
-    !        '****ERROR. SURFDEP FOR UZF CELL', i,                                          &
-    !         'MUST BE > 0 - SPECIFIED VALUE =', surfdep
-    !      call store_error(errmsg)
-    !      surfdep = DZERO
-    !    end if
-    !    !
-    !    ! -- vks
-    !    vks = this%parser%GetDouble()
-    !    if (vks <= DZERO) then
-    !      write(errmsg,'(4x,a,1x,i0,1x,a,1x,g0)')                                          &
-    !        '****ERROR. VKS FOR UZF CELL', i,                                              &
-    !         'MUST BE > 0 - SPECIFIED VALUE =', vks
-    !      call store_error(errmsg)
-    !      vks = DONE
-    !    end if
-    !    !
-    !    ! -- thtr
-    !    thtr = this%parser%GetDouble()
-    !    if (thtr <= DZERO) then
-    !      write(errmsg,'(4x,a,1x,i0,1x,a,1x,g0)')                                          &
-    !        '****ERROR. THTR FOR UZF CELL', i,                                             &
-    !         'MUST BE > 0 - SPECIFIED VALUE =', thtr
-    !      call store_error(errmsg)
-    !      thtr = 0.1
-    !    end if
-    !    !
-    !    ! -- thts
-    !    thts = this%parser%GetDouble()
-    !    if (thts <= thtr) then
-    !      write(errmsg,'(4x,a,1x,i0,1x,a,1x,g0)')                                          &
-    !        '****ERROR. THTS FOR UZF CELL', i,                                             &
-    !         'MUST BE > THTR - SPECIFIED VALUE =', thts
-    !      call store_error(errmsg)
-    !      thts = 0.2
-    !    end if
-    !    !
-    !    ! -- thti
-    !    thti = this%parser%GetDouble()
-    !    if (thti < thtr .OR. thti > thts) then
-    !      write(errmsg,'(4x,a,1x,i0,1x,a,1x,g0)')                                          &
-    !        '****ERROR. THTI FOR UZF CELL', i,                                             &
-    !         'MUST BE >= THTR AND < THTS - SPECIFIED VALUE =', thti
-    !      call store_error(errmsg)
-    !      thti = 0.1
-    !    end if
-    !    !
-    !    ! -- eps
-    !    eps = this%parser%GetDouble()
-    !    if (eps < 3.5 .OR. eps > 14) then
-    !      write(errmsg,'(4x,a,1x,i0,1x,a,1x,g0)')                                          &
-    !        '****ERROR. EPSILON FOR UZF CELL', i,                                          &
-    !         'MUST BE BETWEEN 3.5 and 14.0 - SPECIFIED VALUE =', eps
-    !      call store_error(errmsg)
-    !      eps = 3.5
-    !    end if
-    !    !
-    !    ! -- boundname
-    !    if (this%inamedbound == 1) then
-    !      call this%parser%GetStringCaps(this%boundname(i))
-    !    endif
-    !    n = this%mfcellid(i)
-    !    this%nodelist(i) = n
-    !    hgwf = this%xnew(n)
-    !    this%uzfobj => this%elements(i)%obj
-    !    call this%uzfobj%setdata(i,this%gwfarea(n),this%gwftop(n),this%gwfbot(n), &
-    !                  surfdep,vks,thtr,thts,thti,eps,this%nwav,this%ntrail,       &
-    !                  landflag,ivertcon,hgwf)
-    !    if (ivertcon > 0) then
-    !      this%iuzf2uzf = 1
-    !    end if
-    !   !
-    !  end do
-    !else
-    !  call store_error('ERROR.  REQUIRED PACKAGEDATA BLOCK NOT FOUND.')
-    !end if
-    !!
-    !! -- check for duplicate or missing uzf cells
-    !do i = 1, this%nodes
-    !  if (nboundchk(i) == 0) then
-    !    write(errmsg,'(a,1x,i0)')                                             &
-    !      'ERROR.  NO DATA SPECIFIED FOR UZF CELL', i
-    !    call store_error(errmsg)
-    !  else if (nboundchk(i) > 1) then
-    !    write(errmsg,'(a,1x,i0,1x,a,1x,i0,1x,a)')                             &
-    !      'ERROR.  DATA FOR UZF CELL', i, 'SPECIFIED', nboundchk(i), 'TIMES'
-    !    call store_error(errmsg)
-    !  end if
-    !end do
-    !!
-    !! -- write summary of UZF cell property error messages
-    !ierr = count_errors()
-    !if (ierr > 0) then
-    !  call this%parser%StoreErrorUnit()
-    !  call ustop()
-    !end if
-    !!
-    !! --Initialize one more uzf object, which is used as a worker
-    !i = this%nodes + 1
-    !this%uzfobj => this%elements(i)%obj
-    !n = this%mfcellid(i-1)
-    !hgwf = this%xnew(n)
-    !landflag = 0
-    !ivertcon = 0
-    !call this%uzfobj%setdata(i,this%gwfarea(n),this%gwftop(n),this%gwfbot(n), &
-    !                    surfdep,vks,thtr,thts,thti,eps,this%nwav,this%ntrail, &
-    !                    landflag,ivertcon,hgwf)
-    !!
-    !! -- setup sparse for connectivity used to identify multiple uzf cells per
-    !!    GWF model cell
-    !call sparse%init(this%dis%nodes, this%dis%nodes, rowmaxnnz)
-    !! --
-    !do i = 1, this%nodes
-    !  ic = this%mfcellid(i)
-    !  call sparse%addconnection(ic, i, 1)
-    !end do
-    !!
-    !! -- create ia and ja from sparse
-    !call sparse%filliaja(this%ia,this%ja,ierr)
-    !!
-    !! -- set imaxcellcnt
-    !do i = 1, this%nodes
-    !  j = this%ia(i+1) -this%ia(i)
-    !  if (j > this%imaxcellcnt) then
-    !    this%imaxcellcnt = j
-    !  end if
-    !end do
-    !!
-    !! -- do an initial evaluation of the sum of uzfarea relative to the
-    !!    GWF cell area in the case that there is more than one UZF cell
-    !!    in a GWF cell and a auxmult value is not being applied to the
-    !!    calculate the UZF cell area from the GWF cell area.
-    !if (this%imaxcellcnt > 1 .and. this%iauxmultcol < 1) then
-    !  call this%check_cell_area()
-    !end if
-    !!
-    !! -- deallocate local variables
-    !deallocate(rowmaxnnz)
-    !deallocate(nboundchk)    
+    call this%read_cell_properties()
     !
     ! -- print cell data
     if (this%iprpak /= 0) then
-      call this%pakdata_pr()
+      call this%print_cell_properties()
     end if
     !
     ! allocate space to store moisture content observations
@@ -2704,9 +2480,10 @@ contains
     return
    end subroutine findcellabove
 
-   subroutine pakdata_rd(this)
+   subroutine read_cell_properties(this)
 ! ******************************************************************************
-! pakdata_rd -- Read UZF cell properties and set them for UzfKinematic type.
+! read_cell_properties -- Read UZF cell properties and set them for 
+!                         UzfKinematic type.
 ! ******************************************************************************
     use InputOutputModule, only: urword
     use SimModule, only: ustop, store_error, count_errors
@@ -2943,11 +2720,12 @@ contains
     !
     ! -- return
     return
-  end subroutine pakdata_rd
+  end subroutine read_cell_properties
 
-  subroutine pakdata_pr(this)
+  subroutine print_cell_properties(this)
 ! ******************************************************************************
-! pakdata_pr -- Read UZF cell properties and set them for UzfKinematic type.
+! print_cell_properties -- Read UZF cell properties and set them for 
+!                          UzfKinematic type.
 ! ******************************************************************************
 ! ------------------------------------------------------------------------------
     ! -- dummy
@@ -3035,7 +2813,7 @@ contains
     !
     ! -- return
     return
-  end subroutine pakdata_pr
+  end subroutine print_cell_properties
 
    subroutine check_cell_area(this)
 ! ******************************************************************************
