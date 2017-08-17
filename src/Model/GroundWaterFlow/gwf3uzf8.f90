@@ -229,7 +229,7 @@ contains
     ! -- dummy
     class(UzfType), intent(inout) :: this
     ! -- local
-    type(UzfKinematicType), pointer :: uzfobj     
+    !type(UzfKinematicType), pointer :: uzfobj     
     integer(I4B) :: i, n
 ! ------------------------------------------------------------------------------
     !
@@ -242,8 +242,9 @@ contains
     ! -- Allocate UZF objects plus one extra for work array
     allocate(this%elements(this%nodes+1))
     do i = 1, this%nodes + 1
-      allocate(uzfobj)
-      this%elements(i)%obj => uzfobj
+      !allocate(uzfobj)
+      !this%elements(i)%obj => uzfobj
+      allocate(this%elements(i)%obj)
     enddo
     !
     ! -- Initialize each UZF object
