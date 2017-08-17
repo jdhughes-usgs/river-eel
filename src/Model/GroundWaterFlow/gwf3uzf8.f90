@@ -28,14 +28,7 @@ module UzfModule
   !
   character(len=LENFTYPE)       :: ftype = 'UZF'
   character(len=LENPACKAGENAME) :: text  = '       UZF CELLS' 
-  !
-  !integer(I4B), parameter              :: nbdtxt = 5                             !number of budget items
-  !character(len=LENBUDTXT), dimension(nbdtxt) :: bdtxt = ['         UZF-INF',   & !budget items written to cbc file
-  !                                                        '       UZF-GWRCH',   &
-  !                                                        '         UZF-GWD',   &
-  !                                                        '        UZF-GWET',   &
-  !                                                        '  UZF-GWD TO-MVR']
-  !
+
   type uzfcontainer
     class(UzfKinematicType), pointer :: obj
   end type uzfcontainer
@@ -236,6 +229,7 @@ contains
     ! -- dummy
     class(UzfType), intent(inout) :: this
     ! -- local
+    type(UzfKinematicType), pointer :: uzfobj     
     integer(I4B) :: i, n
 ! ------------------------------------------------------------------------------
     !
@@ -248,8 +242,8 @@ contains
     ! -- Allocate UZF objects plus one extra for work array
     allocate(this%elements(this%nodes+1))
     do i = 1, this%nodes + 1
-      allocate(this%uzfobj)
-      this%elements(i)%obj => this%uzfobj
+      allocate(uzfobj)
+      this%elements(i)%obj => uzfobj
     enddo
     !
     ! -- Initialize each UZF object
@@ -266,10 +260,12 @@ contains
     call mem_setptr(this%gwfiss, 'ISS', trim(this%name_model))
 !
 !   --Read uzf cell properties and set values
+    write(*,*) loc(read_cell_properties)
     call this%read_cell_properties()
     !
     ! -- print cell data
     if (this%iprpak /= 0) then
+      write(*,*) loc(print_cell_properties)
       call this%print_cell_properties()
     end if
     !

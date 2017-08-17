@@ -137,10 +137,10 @@ module IunitModule
 !
 !    SPECIFICATIONS:
 ! ------------------------------------------------------------------------------
-    class(IunitType),intent(inout) :: this
-    character(len=*),intent(in) :: ftyp
-    integer(I4B),intent(inout) :: iunit
-    integer(I4B),intent(in) :: iremove
+    class(IunitType), intent(inout) :: this
+    character(len=*), intent(in) :: ftyp
+    integer(I4B), intent(inout) :: iunit
+    integer(I4B), intent(in) :: iremove
     integer(I4B) :: i, irow, nval
 ! ------------------------------------------------------------------------------
     !
@@ -154,6 +154,7 @@ module IunitModule
     enddo
     !
     ! -- Find the unit number.
+    iunit = 0
     if(irow > 0) then
       nval = this%iunit(irow)%nval
       if(nval > 0) then

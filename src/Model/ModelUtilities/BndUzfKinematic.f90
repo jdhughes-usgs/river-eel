@@ -153,6 +153,27 @@ module UzfKinematicModule
     allocate(this%extdpuz)
     allocate(this%landflag) 
     allocate(this%ivertcon)
+    this%uzdpst = DZERO
+    this%uzthst = DZERO
+    this%uzflst = DZERO
+    this%uzspst = DZERO
+    this%nwavst = 1
+    this%uzolsflx = DZERO
+    this%thtr = DZERO
+    this%thts = DZERO
+    this%thti = DZERO
+    this%eps = DZERO
+    this%ha = DZERO
+    this%hroot = DZERO
+    this%rootact = DZERO
+    this%extwc = DZERO
+    this%etact = DZERO
+    this%nwav = 0
+    this%ntrail = 0
+    this%uzstor = DZERO
+    this%delstor = DZERO
+    this%totflux = DZERO
+    this%vflow = DZERO
     this%sinf = DZERO
     this%finf = DZERO
     this%finf_rej = DZERO
@@ -161,6 +182,7 @@ module UzfKinematicModule
     this%cellarea = DZERO
     this%celtop = DZERO
     this%celbot = DZERO
+    this%landtop = DZERO
     this%cvlm1 = DZERO
     this%watab = DZERO
     this%watabold = DZERO
@@ -171,12 +193,11 @@ module UzfKinematicModule
     this%surfseep = DZERO
     this%gwpet = DZERO
     this%pet = DZERO
+    this%petmax = DZERO
     this%extdp = DZERO
     this%extdpuz = DZERO
-    this%etact = DZERO
     this%landflag = 0
     this%ivertcon = 0
-    this%nwavst = 1
   end subroutine init
   !
   !
