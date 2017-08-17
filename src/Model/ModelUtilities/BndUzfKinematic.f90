@@ -168,7 +168,7 @@ module UzfKinematicModule
     this%rootact = DZERO
     this%extwc = DZERO
     this%etact = DZERO
-    this%nwav = 0
+    this%nwav = nwav
     this%ntrail = 0
     this%uzstor = DZERO
     this%delstor = DZERO
@@ -268,7 +268,7 @@ module UzfKinematicModule
 ! ------------------------------------------------------------------------------
   
   subroutine setdata(this,ipos,area,top,bot,surfdep,     &
-                     vks,thtr,thts,thti,eps,nwav,        &
+                     vks,thtr,thts,thti,eps,             &
                      ntrail,landflag,ivertcon,hgwf)
 ! ******************************************************************************
 ! setdata -- set uzf object material properties
@@ -280,7 +280,7 @@ module UzfKinematicModule
     !modules
     use ConstantsModule, only: DHALF,DZERO
     !arguments
-    integer(I4B), intent(in) :: ipos,nwav,ntrail,landflag,ivertcon
+    integer(I4B), intent(in) :: ipos, ntrail, landflag, ivertcon
     real(DP), intent(in) :: area
     real(DP), intent(in) :: top
     real(DP), intent(in) :: bot
@@ -313,7 +313,6 @@ module UzfKinematicModule
     this%thts = thts
     this%thti = thti
     this%eps = eps
-    this%nwav = nwav
     this%ntrail = ntrail
     this%pet = DZERO
     this%extdp = DZERO

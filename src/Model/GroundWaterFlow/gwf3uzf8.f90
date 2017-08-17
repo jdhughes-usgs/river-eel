@@ -260,12 +260,12 @@ contains
     call mem_setptr(this%gwfiss, 'ISS', trim(this%name_model))
 !
 !   --Read uzf cell properties and set values
-    write(*,*) loc(read_cell_properties)
+    write(*,*) 'read_cell_properties address: ', loc(read_cell_properties)
     call this%read_cell_properties()
     !
     ! -- print cell data
     if (this%iprpak /= 0) then
-      write(*,*) loc(print_cell_properties)
+      write(*,*)  'print_cell_properties address: ', loc(print_cell_properties)
       call this%print_cell_properties()
     end if
     !
@@ -2485,14 +2485,18 @@ contains
     use SimModule, only: ustop, store_error, count_errors
 ! ------------------------------------------------------------------------------
     ! -- dummy
-    class(UzfType) :: this
+    class(UzfType), intent(inout) :: this
     ! -- local
     character(len=LINELENGTH) :: line, errmsg, cellid
-    integer(I4B) :: ierr, i, n, landflag, ivertcon
+    integer(I4B) :: ierr
+    integer(I4B) :: i, n
     integer(I4B) :: j
     integer(I4B) :: ic
+    integer(I4B) :: jcol
     logical :: isfound, endOfBlock
-    real(DP) :: surfdep,vks,thtr,thts,thti,eps,hgwf
+    integer(I4B) :: landflag
+    integer(I4B) :: ivertcon
+    real(DP) :: surfdep, vks, thtr, thts, thti, eps, hgwf
     integer(I4B), dimension(:), allocatable :: rowmaxnnz
     type(sparsematrix) :: sparse
     integer(I4B), dimension(:), allocatable :: nboundchk
@@ -2512,14 +2516,15 @@ contains
     end do
     !
     ! -- initialize variables
+    landflag = 0
+    ivertcon = 0
     surfdep = DZERO
     vks = DZERO
     thtr = DZERO
     thts = DZERO
     thti = DZERO
     eps = DZERO
-    landflag = 0
-    ivertcon = 0
+    hgwf = DZERO
     !
     ! -- get uzf properties block
     call this%parser%GetBlock('PACKAGEDATA', isfound, ierr, supportOpenClose=.true.)
@@ -2640,8 +2645,8 @@ contains
         hgwf = this%xnew(n)
         this%uzfobj => this%elements(i)%obj
         call this%uzfobj%setdata(i,this%gwfarea(n),this%gwftop(n),this%gwfbot(n), &
-                      surfdep,vks,thtr,thts,thti,eps,this%nwav,this%ntrail,       &
-                      landflag,ivertcon,hgwf)
+                                 surfdep,vks,thtr,thts,thti,eps,this%ntrail,      &
+                                 landflag,ivertcon,hgwf)
         if (ivertcon > 0) then
           this%iuzf2uzf = 1
         end if
@@ -2679,8 +2684,8 @@ contains
     landflag = 0
     ivertcon = 0
     call this%uzfobj%setdata(i,this%gwfarea(n),this%gwftop(n),this%gwfbot(n), &
-                        surfdep,vks,thtr,thts,thti,eps,this%nwav,this%ntrail, &
-                        landflag,ivertcon,hgwf)
+                             surfdep,vks,thtr,thts,thti,eps,this%ntrail,      &
+                             landflag,ivertcon,hgwf)
     !
     ! -- setup sparse for connectivity used to identify multiple uzf cells per
     !    GWF model cell
@@ -2696,9 +2701,12 @@ contains
     !
     ! -- set imaxcellcnt
     do i = 1, this%nodes
-      j = this%ia(i+1) -this%ia(i)
-      if (j > this%imaxcellcnt) then
-        this%imaxcellcnt = j
+      jcol = 0
+      do j = this%ia(i), this%ia(i+1) - 1
+        jcol = jcol + 1
+      end do
+      if (jcol > this%imaxcellcnt) then
+        this%imaxcellcnt = jcol
       end if
     end do
     !
@@ -2707,6 +2715,7 @@ contains
     !    in a GWF cell and a auxmult value is not being applied to the
     !    calculate the UZF cell area from the GWF cell area.
     if (this%imaxcellcnt > 1 .and. this%iauxmultcol < 1) then
+      write(*,*) 'check_cell_area address: ', loc(check_cell_area)
       call this%check_cell_area()
     end if
     !
@@ -2725,7 +2734,7 @@ contains
 ! ******************************************************************************
 ! ------------------------------------------------------------------------------
     ! -- dummy
-    class(UzfType) :: this
+    class(UzfType), intent(inout) :: this
     ! -- local
     character (len=20) :: cellids, cellid
     character(len=LINELENGTH) :: line, linesep
