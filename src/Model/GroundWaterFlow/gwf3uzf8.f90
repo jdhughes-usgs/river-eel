@@ -260,12 +260,12 @@ contains
     call mem_setptr(this%gwfiss, 'ISS', trim(this%name_model))
 !
 !   --Read uzf cell properties and set values
-    write(*,*) 'read_cell_properties address: ', loc(read_cell_properties)
+    write(*,'(a,1x,z0)') 'read_cell_properties address:  ', loc(read_cell_properties)
     call this%read_cell_properties()
     !
     ! -- print cell data
     if (this%iprpak /= 0) then
-      write(*,*)  'print_cell_properties address: ', loc(print_cell_properties)
+      write(*,'(a,1x,z0)')  'print_cell_properties address: ', loc(print_cell_properties)
       call this%print_cell_properties()
     end if
     !
@@ -2715,7 +2715,7 @@ contains
     !    in a GWF cell and a auxmult value is not being applied to the
     !    calculate the UZF cell area from the GWF cell area.
     if (this%imaxcellcnt > 1 .and. this%iauxmultcol < 1) then
-      write(*,*) 'check_cell_area address: ', loc(check_cell_area)
+      write(*,'(a,1x,z0)') 'check_cell_area address: ', loc(check_cell_area)
       call this%check_cell_area()
     end if
     !
