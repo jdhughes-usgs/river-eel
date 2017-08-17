@@ -260,12 +260,12 @@ contains
     call mem_setptr(this%gwfiss, 'ISS', trim(this%name_model))
 !
 !   --Read uzf cell properties and set values
-    write(*,'(a,1x,z0)') 'read_cell_properties address:  ', loc(read_cell_properties)
+    write(*,'(a,1x,Z0)') 'read_cell_properties address:  ', loc(read_cell_properties)
     call this%read_cell_properties()
     !
     ! -- print cell data
     if (this%iprpak /= 0) then
-      write(*,'(a,1x,z0)')  'print_cell_properties address: ', loc(print_cell_properties)
+      write(*,'(a,1x,Z0)')  'print_cell_properties address: ', loc(print_cell_properties)
       call this%print_cell_properties()
     end if
     !
