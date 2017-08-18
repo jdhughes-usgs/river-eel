@@ -29,10 +29,6 @@ module UzfModule
   character(len=LENFTYPE)       :: ftype = 'UZF'
   character(len=LENPACKAGENAME) :: text  = '       UZF CELLS' 
 
-  type uzfcontainer
-    class(UzfKinematicType), pointer :: obj
-  end type uzfcontainer
-
   private
   public :: uzf_create
 
@@ -49,7 +45,7 @@ module UzfModule
     type(UzfKinematicType), pointer                    :: uzfobj      => null() !uzf kinematic object
     type(UzfKinematicType), pointer                    :: uzfobjwork  => null() !uzf kinematic work object
     type(UzfKinematicType), pointer                    :: uzfobjbelow => null() !uzf kinematic object of underlying cell
-    type(uzfcontainer), pointer, dimension(:)          :: elements    => null() !array of all the kinematic uzf objects
+    type(UzfKinematicType), pointer, dimension(:)      :: elements    => null() !array of all the kinematic uzf objects
     character(len=72), pointer                         :: nameuzf     => null() !cdl--(not sure.  Delete?)
     !
     ! -- pointer to gwf variables
@@ -243,13 +239,13 @@ contains
     allocate(this%elements(this%nodes+1))
     do i = 1, this%nodes + 1
       !allocate(uzfobj)
-      !this%elements(i)%obj => uzfobj
-      allocate(this%elements(i)%obj)
+      !this%elements(i) => uzfobj
+      allocate(this%elements(i))
     enddo
     !
     ! -- Initialize each UZF object
     do i = 1, this%nodes+1
-        this%uzfobj => this%elements(i)%obj
+        this%uzfobj => this%elements(i)
         call this%uzfobj%init(i,this%nwav)
     end do
     !
@@ -803,13 +799,13 @@ contains
         end if
         !
         ! -- setup pointers
-        this%uzfobj => this%elements(i)%obj
+        this%uzfobj => this%elements(i)
         ivertflag = this%uzfobj%ivertcon
         if ( ivertflag > 0 ) then
-          this%uzfobjbelow => this%elements(ivertflag)%obj
+          this%uzfobjbelow => this%elements(ivertflag)
         else
           ! -- point to i so not null.  Does not use in this case.
-          this%uzfobjbelow => this%elements(i)%obj
+          this%uzfobjbelow => this%elements(i)
         end if
         !
         !
@@ -963,7 +959,7 @@ contains
     if ( (this%issflag == 0 .AND. kper == 1) .or.                              &
       (kper == 2 .AND. this%issflagold == 1) ) then
       do i = 1, this%nodes
-        this%uzfobj => this%elements(i)%obj
+        this%uzfobj => this%elements(i)
         call this%uzfobj%setwaves(i)
       end do
     end if
@@ -995,7 +991,7 @@ contains
     call this%TsManager%ad()
     !
     do i = 1, this%nodes
-        this%uzfobj => this%elements(i)%obj
+        this%uzfobj => this%elements(i)
         call this%uzfobj%advance()
     end do
     !
@@ -1003,13 +999,13 @@ contains
     do i = 1, this%nodes
       !
       ! -- setup pointers
-      this%uzfobj => this%elements(i)%obj
+      this%uzfobj => this%elements(i)
       ivertflag = this%uzfobj%ivertcon
       if ( ivertflag > 0 ) then
-        this%uzfobjbelow => this%elements(ivertflag)%obj
+        this%uzfobjbelow => this%elements(ivertflag)
       else
         ! -- point to iuzf so not null.  Does not use in this case.
-        this%uzfobjbelow => this%elements(i)%obj
+        this%uzfobjbelow => this%elements(i)
       end if
       !
       ! -- recalculate uzfarea
@@ -1396,15 +1392,15 @@ contains
       !
       ! -- Initialize variables
       n = this%nodelist(i)
-      this%uzfobj => this%elements(i)%obj
+      this%uzfobj => this%elements(i)
       ivertflag = this%uzfobj%ivertcon
       !
       ! Create pointer to object below
       if ( ivertflag > 0 ) then
-        this%uzfobjbelow => this%elements(ivertflag)%obj
+        this%uzfobjbelow => this%elements(ivertflag)
       else
         ! -- point to i so not null.  Does not use in this case.
-        this%uzfobjbelow => this%elements(i)%obj
+        this%uzfobjbelow => this%elements(i)
       end if
       !
       ! -- Skip if cell is not active
@@ -1846,7 +1842,7 @@ contains
       do n = 1, this%nodes
         !
         ! -- Initialize variables
-        this%uzfobj => this%elements(n)%obj
+        this%uzfobj => this%elements(n)
         ivertflag = this%uzfobj%ivertcon
         if ( ivertflag > 0 ) then
           nlen = nlen + 1
@@ -1861,7 +1857,7 @@ contains
         do n = 1, this%nodes
           !
           ! -- Initialize variables
-          this%uzfobj => this%elements(n)%obj
+          this%uzfobj => this%elements(n)
           ivertflag = this%uzfobj%ivertcon
           if ( ivertflag > 0 ) then
              q = this%uzfobj%surfluxbelow * this%uzfobj%uzfarea
@@ -1893,7 +1889,7 @@ contains
       do n = 1, this%nodes
         !
         ! -- Initialize variables
-        this%uzfobj => this%elements(n)%obj
+        this%uzfobj => this%elements(n)
         this%qauxcbc(1) = this%uzfobj%uzfarea
         n2 = this%mfcellid(n)
         q = -this%rch(n)
@@ -2147,7 +2143,7 @@ contains
         ! -- infiltration from cell above
         if (this%iuzf2uzf == 1) then
           q = DZERO
-          this%uzfobj => this%elements(n)%obj
+          this%uzfobj => this%elements(n)
           if (this%uzfobj%landflag == 0) then
             q = this%infiltration(n)
             qin = qin + q
@@ -2201,7 +2197,7 @@ contains
         ! -- uzf below
         if (this%iuzf2uzf == 1) then
           q = DZERO
-          this%uzfobj => this%elements(n)%obj
+          this%uzfobj => this%elements(n)
           ivertflag = this%uzfobj%ivertcon
           if ( ivertflag > 0 ) then
               q = this%uzfobj%surfluxbelow * this%uzfobj%uzfarea
@@ -2272,7 +2268,7 @@ contains
 ! ------------------------------------------------------------------------------
     !
     ! -- Initialize
-    this%uzfobjwork => this%elements(this%nodes+1)%obj
+    this%uzfobjwork => this%elements(this%nodes+1)
     ierr = 0
     sumaet = DZERO
     !
@@ -2285,15 +2281,15 @@ contains
       uzderiv = DZERO
       gwet = DZERO
       derivgwet = DZERO
-      this%uzfobj => this%elements(i)%obj
+      this%uzfobj => this%elements(i)
       ivertflag = this%uzfobj%ivertcon
       !
       ! Create pointer to object below
       if ( ivertflag > 0 ) then
-        this%uzfobjbelow => this%elements(ivertflag)%obj
+        this%uzfobjbelow => this%elements(ivertflag)
       else
         ! -- point to i so not null.  Does not use in this case.
-        this%uzfobjbelow => this%elements(i)%obj
+        this%uzfobjbelow => this%elements(i)
       end if
       !
       n = this%nodelist(i)
@@ -2644,7 +2640,7 @@ contains
         n = this%mfcellid(i)
         this%nodelist(i) = n
         hgwf = this%xnew(n)
-        this%uzfobj => this%elements(i)%obj
+        this%uzfobj => this%elements(i)
         call this%uzfobj%setdata(i,this%gwfarea(n),this%gwftop(n),this%gwfbot(n), &
                                  surfdep,vks,thtr,thts,thti,eps,this%ntrail,      &
                                  landflag,ivertcon,hgwf)
@@ -2679,7 +2675,7 @@ contains
     !
     ! --Initialize one more uzf object, which is used as a worker
     i = this%nodes + 1
-    this%uzfobj => this%elements(i)%obj
+    this%uzfobj => this%elements(i)
     n = this%mfcellid(i-1)
     hgwf = this%xnew(n)
     landflag = 0
@@ -2783,7 +2779,7 @@ contains
     do i = 1, this%nodes
       !
       ! -- Initialize variables
-      this%uzfobj => this%elements(i)%obj
+      this%uzfobj => this%elements(i)
       !
       ! -- get cellid
       node = this%mfcellid(i)
@@ -2854,13 +2850,13 @@ contains
     do i = 1, this%nodes
       !
       ! -- Initialize variables
-      this%uzfobj => this%elements(i)%obj
+      this%uzfobj => this%elements(i)
       i2 = this%uzfobj%ivertcon
       area = this%uzfobj%uzfarea
       !
       ! Create pointer to object below
       if ( i2 > 0 ) then
-        this%uzfobjbelow => this%elements(i2)%obj
+        this%uzfobjbelow => this%elements(i2)
         area2 = this%uzfobjbelow%uzfarea
         d = abs(area - area2)
         if (d > DEM6) then
@@ -2886,7 +2882,7 @@ contains
         i = this%ja(j)
         write(cuzf,'(i0)') i
         cuzfcells = trim(adjustl(cuzfcells)) // ' ' // trim(adjustl(cuzf))
-        this%uzfobj => this%elements(i)%obj
+        this%uzfobj => this%elements(i)
         sumarea = sumarea + this%uzfobj%uzfarea
         cellarea = this%uzfobj%cellarea
       end do
@@ -2926,7 +2922,7 @@ contains
     integer(I4B) :: i
 ! ------------------------------------------------------------------------------
     do i = 1, this%nodes
-        uzfobj => this%elements(i)%obj
+        uzfobj => this%elements(i)
     end do
   end subroutine uzcelloutput
 
@@ -3092,7 +3088,7 @@ contains
             case ('STORAGE')
               v = -this%qsto(n)
             case ('NET-INFILTRATION')
-              this%uzfobj => this%elements(n)%obj
+              this%uzfobj => this%elements(n)
               v = this%infiltration(n)
             case ('WATER-CONTENT')
               v = this%obs_theta(i)  ! more than one obs per node
@@ -3210,7 +3206,7 @@ contains
         obsrv%dblPak1 = obsdepth
         !
         ! -- determine maximum cell depth
-        this%uzfobj => this%elements(n)%obj
+        this%uzfobj => this%elements(n)
         dmax = this%uzfobj%celtop - this%uzfobj%celbot
         ! -- check that obs depth is valid; call store_error if not
         ! -- need to think about a way to put bounds on this depth
@@ -3406,9 +3402,9 @@ contains
     !
     ! -- deallocate uzf objects
     do i = 1, this%nodes+1
-        this%uzfobj => this%elements(i)%obj
+        this%uzfobj => this%elements(i)
         call this%uzfobj%dealloc()
-        deallocate(this%uzfobj)
+        !deallocate(this%uzfobj)
     end do
     nullify(this%uzfobj)
     nullify(this%uzfobjwork)
