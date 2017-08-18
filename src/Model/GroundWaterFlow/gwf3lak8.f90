@@ -3923,8 +3923,6 @@ contains
     ! -- for observations
     integer(I4B) :: iprobslocal
     ! -- formats
-    character(len=*), parameter :: fmttkk = &
-      "(1X,/1X,A,'   PERIOD ',I0,'   STEP ',I0)"
 ! ------------------------------------------------------------------------------
     !
     ! -- recalculate package HCOF and RHS terms with latest groundwater and

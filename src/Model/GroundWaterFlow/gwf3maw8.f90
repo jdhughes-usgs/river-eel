@@ -2244,8 +2244,6 @@ contains
     ! -- for observations
     integer(I4B) :: iprobslocal
     ! -- formats
-    character(len=*), parameter :: fmttkk = &
-      "(1X,/1X,A,'   PERIOD ',I0,'   STEP ',I0)"
 ! ------------------------------------------------------------------------------
     !
     ! -- recalculate package HCOF and RHS terms with latest groundwater and
@@ -2851,7 +2849,7 @@ contains
         call UWWORD(line, iloc, 11, 1, 'well', n, q, CENTER=.TRUE.)
       end if
       call UWWORD(line, iloc, 11, 1, 'constant', n, q, CENTER=.TRUE.)
-      call UWWORD(line, iloc, 11, 1, 'well', n, q, CENTER=.TRUE.)
+      call UWWORD(line, iloc, 11, 1, 'well', n, q, CENTER=.TRUE., SEP=' ')
       call UWWORD(line, iloc, 11, 1, 'percent', n, q, CENTER=.TRUE.)
       ! -- create line separator
       linesep = repeat('-', iloc)
@@ -2884,7 +2882,7 @@ contains
         call UWWORD(line, iloc, 11, 1, 'storage', n, q, CENTER=.TRUE.)
       end if
       call UWWORD(line, iloc, 11, 1, 'flow', n, q, CENTER=.TRUE.)
-      call UWWORD(line, iloc, 11, 1, 'in - out', n, q, CENTER=.TRUE.)
+      call UWWORD(line, iloc, 11, 1, 'in - out', n, q, CENTER=.TRUE., SEP=' ')
       call UWWORD(line, iloc, 11, 1, 'difference', n, q, CENTER=.TRUE.)
       ! -- write second line
       write(iout,'(1X,A)') line(1:iloc)
@@ -2993,7 +2991,7 @@ contains
           qin = qin + qconst
         end if
         qerr = qin - qout
-        call UWWORD(line, iloc, 11, 3, text, n, qerr)
+        call UWWORD(line, iloc, 11, 3, text, n, qerr, SEP=' ')
         qavg = DHALF * (qin + qout)
         if (qavg > DZERO) then
           qpd = DHUNDRED * qerr / qavg

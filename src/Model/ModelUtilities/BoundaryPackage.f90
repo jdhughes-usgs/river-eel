@@ -624,7 +624,7 @@ module BndModule
     ! -- If cell-by-cell flows will be saved as a list, write header.
     if(ibinun /= 0) then
       naux = this%naux
-      call this%dis%record_srcdst_list_header(this%text, this%name_model,  &
+      call this%dis%record_srcdst_list_header(this%text, this%name_model,      &
                   this%name_model, this%name_model, this%name, naux,           &
                   this%auxname, ibinun, this%nbound, this%iout)
     endif
@@ -662,8 +662,9 @@ module BndModule
             !    and PRINT_FLOWS was specified (this%iprflow<0)
             if(ibudfl /= 0) then
               if(this%iprflow /= 0) then
-                if(ibdlbl == 0) write(this%iout,fmttkk) this%text, kper, kstp
-                call this%dis%print_list_entry(i, node, rrate, this%iout,    &
+                if(ibdlbl == 0) write(this%iout,fmttkk)                        &
+                  this%text // ' (' // trim(this%name) // ')', kper, kstp
+                call this%dis%print_list_entry(i, node, rrate, this%iout,      &
                         bname)
                 ibdlbl=1
               endif

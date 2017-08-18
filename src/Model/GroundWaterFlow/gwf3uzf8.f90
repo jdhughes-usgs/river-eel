@@ -225,7 +225,6 @@ contains
     ! -- dummy
     class(UzfType), intent(inout) :: this
     ! -- local
-    !type(UzfKinematicType), pointer :: uzfobj     
     integer(I4B) :: i, n
 ! ------------------------------------------------------------------------------
     !
@@ -238,8 +237,6 @@ contains
     ! -- Allocate UZF objects plus one extra for work array
     allocate(this%elements(this%nodes+1))
     do i = 1, this%nodes + 1
-      !allocate(uzfobj)
-      !this%elements(i) => uzfobj
       allocate(this%elements(i))
     enddo
     !
@@ -257,12 +254,12 @@ contains
     call mem_setptr(this%gwfiss, 'ISS', trim(this%name_model))
 !
 !   --Read uzf cell properties and set values
-    write(*,'(a,1x,Z0)') 'read_cell_properties address:  ', loc(read_cell_properties)
+    write(*,*) 'read_cell_properties address: ', loc(read_cell_properties)
     call this%read_cell_properties()
     !
     ! -- print cell data
     if (this%iprpak /= 0) then
-      write(*,'(a,1x,Z0)')  'print_cell_properties address: ', loc(print_cell_properties)
+      write(*,*)  'print_cell_properties address: ', loc(print_cell_properties)
       call this%print_cell_properties()
     end if
     !
@@ -1622,8 +1619,9 @@ contains
           ! -- Print the individual rates if requested(this%iprflow<0)
           if (ibudfl /= 0) then
             if (this%iprflow /= 0) then
-              if (ibdlbl == 0) write(this%iout,fmttkk) this%bdtxt(2), kper, kstp
-              call this%dis%print_list_entry(i, node, rrate, this%iout,     &
+              if (ibdlbl == 0) write(this%iout,fmttkk)                         &
+                  this%bdtxt(2) // ' (' // trim(this%name) // ')', kper, kstp
+              call this%dis%print_list_entry(i, node, rrate, this%iout,        &
                       bname)
               ibdlbl=1
             end if
@@ -1633,8 +1631,8 @@ contains
         ! -- If saving cell-by-cell flows in list, write flow
         if (ibinun /= 0) then
           n2 = i
-          call this%dis%record_mf6_list_entry(ibinun, node, n2, rrate,          &
-                                                  naux, this%auxvar(:,i),       &
+          call this%dis%record_mf6_list_entry(ibinun, node, n2, rrate,         &
+                                                  naux, this%auxvar(:,i),      &
                                                   olconv2=.FALSE.)
         end if
       end do
@@ -1643,8 +1641,9 @@ contains
       if (this%iseepflag == 1) then
         ibdlbl = 0
         if (ibinun /= 0) then
-          call this%dis%record_srcdst_list_header(this%bdtxt(3), this%name_model,&
-                      this%name_model, this%name_model, this%name, naux,         &
+          call this%dis%record_srcdst_list_header(this%bdtxt(3),               &
+                      this%name_model,                                         &
+                      this%name_model, this%name_model, this%name, naux,       &
                       this%auxname, ibinun, this%nodes, this%iout)
         end if
         !
@@ -1668,7 +1667,8 @@ contains
             ! -- Print the individual rates if requested(this%iprflow<0)
             if (ibudfl /= 0) then
               if (this%iprflow /= 0) then
-                if (ibdlbl == 0) write(this%iout,fmttkk) this%bdtxt(3), kper, kstp
+                if (ibdlbl == 0) write(this%iout,fmttkk)                       &
+                  this%bdtxt(3) // ' (' // trim(this%name) // ')', kper, kstp
                 call this%dis%print_list_entry(i, node, rrate, this%iout, &
                         bname)
                 ibdlbl=1
@@ -1715,8 +1715,9 @@ contains
               ! -- Print the individual rates if requested(this%iprflow<0)
               if (ibudfl /= 0) then
                 if (this%iprflow /= 0) then
-                  if (ibdlbl == 0) write(this%iout,fmttkk) this%bdtxt(5), kper, kstp
-                  call this%dis%print_list_entry(i, node, rrate, this%iout, &
+                  if (ibdlbl == 0) write(this%iout,fmttkk)                     &
+                    this%bdtxt(5) // ' (' // trim(this%name) // ')', kper, kstp
+                  call this%dis%print_list_entry(i, node, rrate, this%iout,    &
                           bname)
                   ibdlbl=1
                 end if
@@ -1762,7 +1763,8 @@ contains
             ! -- Print the individual rates if requested(this%iprflow<0)
             if (ibudfl /= 0) then
               if (this%iprflow /= 0) then
-                if (ibdlbl == 0) write(this%iout,fmttkk) this%bdtxt(4), kper, kstp
+                if (ibdlbl == 0) write(this%iout,fmttkk)                       &
+                  this%bdtxt(4) // ' (' // trim(this%name) // ')', kper, kstp
                 call this%dis%print_list_entry(i, node, rrate, this%iout, &
                         bname)
                 ibdlbl=1
@@ -2484,7 +2486,7 @@ contains
     ! -- dummy
     class(UzfType), intent(inout) :: this
     ! -- local
-    character(len=LINELENGTH) :: line, errmsg, cellid
+    character(len=LINELENGTH) :: errmsg, cellid
     integer(I4B) :: ierr
     integer(I4B) :: i, n
     integer(I4B) :: j
@@ -2712,7 +2714,7 @@ contains
     !    in a GWF cell and a auxmult value is not being applied to the
     !    calculate the UZF cell area from the GWF cell area.
     if (this%imaxcellcnt > 1 .and. this%iauxmultcol < 1) then
-      write(*,'(a,1x,z0)') 'check_cell_area address: ', loc(check_cell_area)
+      write(*,*) 'check_cell_area address: ', loc(check_cell_area)
       call this%check_cell_area()
     end if
     !
@@ -3404,7 +3406,6 @@ contains
     do i = 1, this%nodes+1
         this%uzfobj => this%elements(i)
         call this%uzfobj%dealloc()
-        !deallocate(this%uzfobj)
     end do
     nullify(this%uzfobj)
     nullify(this%uzfobjwork)

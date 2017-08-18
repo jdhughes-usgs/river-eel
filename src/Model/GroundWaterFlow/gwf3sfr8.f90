@@ -1433,8 +1433,6 @@ contains
     ! -- for observations
     integer(I4B) :: iprobslocal
     ! -- formats
-    character(len=*), parameter :: fmttkk = &
-      "(1X,/1X,A,'   PERIOD ',I0,'   STEP ',I0)"
 ! --------------------------------------------------------------------------
     !
     ! -- Suppress saving of simulated values; they
