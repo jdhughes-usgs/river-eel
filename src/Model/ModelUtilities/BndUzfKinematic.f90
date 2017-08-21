@@ -12,7 +12,6 @@ module UzfKinematicModule
   public :: UzfKinematicType
   
   type :: UzfKinematicType
-      integer(I4B), dimension(:), pointer :: elements             => null()
       real(DP), pointer :: thtr                      => null()
       real(DP), pointer :: thts                      => null()
       real(DP), pointer :: thti                      => null()
