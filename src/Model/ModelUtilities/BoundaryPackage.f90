@@ -1246,7 +1246,7 @@ module BndModule
           !    development version and are not included in the documentation.
           !    These options are only available when IDEVELOPMODE in
           !    constants module is set to 1
-          case ('NO_NEWTON')
+          case ('DEV_NO_NEWTON')
             call this%parser%DevOpt()
             this%inewton = 0
             write(this%iout, '(4x,a)')                                         &

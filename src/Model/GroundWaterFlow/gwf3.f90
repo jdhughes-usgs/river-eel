@@ -62,6 +62,7 @@ module GwfModule
     procedure :: model_cf                => gwf_cf
     procedure :: model_fc                => gwf_fc
     procedure :: model_cc                => gwf_cc
+    procedure :: model_ptcchk            => gwf_ptcchk
     procedure :: model_ptc               => gwf_ptc
     procedure :: model_nur               => gwf_nur
     procedure :: model_bd                => gwf_bd
@@ -107,7 +108,7 @@ module GwfModule
     use InputOutputModule,          only: write_centered
     use ConstantsModule,            only: VERSION, MFVNAM, MFTITLE,            &
                                           FMTDISCLAIMER, LINELENGTH,           &
-                                          LENPACKAGENAME
+                                          LENPACKAGENAME, IDEVELOPMODE
     use CompilerVersion
     use MemoryManagerModule,        only: mem_allocate
     use GwfDisModule,               only: dis_cr
@@ -150,6 +151,7 @@ module GwfModule
     ! -- Assign values
     this%filename = filename
     this%name = modelname
+    this%macronym = 'GWF'
     this%id = id
     if(present(smr)) this%single_model_run = smr
     !
@@ -163,6 +165,11 @@ module GwfModule
     call write_centered(MFTITLE, this%iout, 80)
     call write_centered('GROUNDWATER FLOW MODEL (GWF)', this%iout, 80)
     call write_centered('VERSION '//VERSION, this%iout, 80)
+    !
+    ! -- Write if develop mode
+    if (IDEVELOPMODE == 1) call write_centered('***DEVELOP MODE***',           &
+      this%iout, 80)
+    !
     ! -- Write compiler version
     call get_compiler(compiler)
     call write_centered(' ', this%iout, 80)
@@ -676,6 +683,38 @@ module GwfModule
     ! -- return
     return
   end subroutine gwf_cc
+  
+  subroutine gwf_ptcchk(this, iptc)
+! ******************************************************************************
+! gwf_ptc -- check if pseudo-transient continuation factor should be used
+! Subroutine: (1) Check if pseudo-transient continuation factor should be used
+! ******************************************************************************
+!
+!    SPECIFICATIONS:
+! ------------------------------------------------------------------------------
+    ! modules
+    ! -- dummy
+    class(GwfModelType) :: this
+    integer(I4B), intent(inout) :: iptc
+! ------------------------------------------------------------------------------
+    ! -- determine if pseudo-transient continuation should be applied to this 
+    !    model - pseudo-transient continuation only appled to problems without 
+    !    storage
+    iptc = 0
+    if (this%iss > 0) then
+      if (this%insto == 0) then
+        ! -- and problems using Newton-Raphson
+        if (this%inewton > 0) then
+          iptc = this%inewton
+        else
+          iptc = this%npf%inewton
+        end if
+      end if
+    end if
+    !
+    ! -- return
+    return
+  end subroutine gwf_ptcchk
 
   subroutine gwf_ptc(this, kiter, neqsln, njasln, ia, ja,                       &
                      x, rhs, amatsln, iptc, ptcf)

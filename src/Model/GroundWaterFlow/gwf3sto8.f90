@@ -761,12 +761,12 @@ module GwfStoModule
           !    development version and are not included in the documentation.
           !    These options are only available when IDEVELOPMODE in
           !    constants module is set to 1
-          case ('NO_NEWTON')
+          case ('DEV_NO_NEWTON')
             call this%parser%DevOpt()
             this%inewton = 0
             write(this%iout, '(4x,a)')                                         &
                              'NEWTON-RAPHSON method disabled for unconfined cell storage'
-          case ('OLDSTORAGEFORMULATION')
+          case ('DEV_OLDSTORAGEFORMULATION')
             call this%parser%DevOpt()
             this%isseg = 1
             write(this%iout,fmtstoseg)

@@ -254,12 +254,10 @@ contains
     call mem_setptr(this%gwfiss, 'ISS', trim(this%name_model))
 !
 !   --Read uzf cell properties and set values
-    write(*,*) 'read_cell_properties address: ', loc(read_cell_properties)
     call this%read_cell_properties()
     !
     ! -- print cell data
     if (this%iprpak /= 0) then
-      write(*,*)  'print_cell_properties address: ', loc(print_cell_properties)
       call this%print_cell_properties()
     end if
     !
@@ -514,14 +512,14 @@ contains
       !
       ! -- right now these are options that are available but may not be available in
       !    the release (or in documentation)
-      case('NO_FINAL_CHECK')
+      case('DEV_NO_FINAL_CHECK')
         call this%parser%DevOpt()
         this%iconvchk = 0
         write(this%iout, '(4x,a)')                                             &
      &    'A FINAL CONVERGENCE CHECK OF THE CHANGE IN UZF RECHARGE ' //        &
      &    'WILL NOT BE MADE'
         found = .true.
-      case('MAXIMUM_PERCENT_DIFFERENCE')
+      case('DEV_MAXIMUM_PERCENT_DIFFERENCE')
         call this%parser%DevOpt()
         r = this%parser%GetDouble()
         if (r > DZERO) then
@@ -2714,7 +2712,6 @@ contains
     !    in a GWF cell and a auxmult value is not being applied to the
     !    calculate the UZF cell area from the GWF cell area.
     if (this%imaxcellcnt > 1 .and. this%iauxmultcol < 1) then
-      write(*,*) 'check_cell_area address: ', loc(check_cell_area)
       call this%check_cell_area()
     end if
     !

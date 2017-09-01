@@ -9,8 +9,8 @@ RCH    21 Reilly.rch
 PCG    22 Reilly.pcg
 MNW2   23 Reilly.mnw2
 MNWI   79 Reilly.mnwi
-DATA   81 Reilly.qsu.out REPLACE
-DATA   82 Reilly.byn.out REPLACE
-DATA   45 Reilly.wlA.out REPLACE
+DATA   81 Reilly.qsu
+DATA   82 Reilly.byn
+DATA   45 Reilly.wlA
 DATA(BINARY)   51 Reilly.hds REPLACE
 DATA(BINARY)   53 Reilly.cbc REPLACE

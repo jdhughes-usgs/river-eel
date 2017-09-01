@@ -1477,7 +1477,7 @@ contains
       !    development version and are not included in the documentation.
       !    These options are only available when IDEVELOPMODE in
       !    constants module is set to 1
-      case('PEACEMAN_EFFECTIVE_RADIUS')
+      case('DEV_PEACEMAN_EFFECTIVE_RADIUS')
         call this%parser%DevOpt()
         this%ieffradopt = 1
         write(this%iout, '(4x,a)')                                             &
