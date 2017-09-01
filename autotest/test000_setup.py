@@ -4,6 +4,15 @@ import platform
 import shutil
 import pymake
 
+
+# update these for new versions
+mf2005dir = 'MF2005.1_12u'
+mf2005url = "https://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.12.00/{}.zip".format(mf2005dir)
+mfnwtdir = 'MODFLOW-NWT_1.1.3'
+mfnwturl = "https://water.usgs.gov/ogw/modflow-nwt/{0}.zip".format(mfnwtdir)
+mfusgdir = 'mfusg.1_3'
+mfusgurl = 'https://water.usgs.gov/ogw/mfusg/{0}.zip'.format(mfusgdir)
+
 fc = 'gfortran'
 cc = 'gcc'
 
@@ -79,13 +88,13 @@ def test_build_modflow():
         os.makedirs(dstpth)
     os.chdir(dstpth)
 
-    # Download the MODFLOW-2005 distribution
-    url = "https://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.12.00/MF2005.1_12u.zip"
-    pymake.download_and_unzip(url)
-
     # Set dir name
-    dirname = 'MF2005.1_12u'
+    dirname = mf2005dir
     srcdir = os.path.join(dirname, 'src')
+
+    # Download the MODFLOW-2005 distribution
+    url = mf2005url
+    pymake.download_and_unzip(url)
 
     # compile code
     print('compiling...{}'.format(os.path.relpath(target)))
@@ -125,11 +134,11 @@ def test_build_mfnwt():
     os.chdir(dstpth)
 
     # Set dir name
-    dirname = 'MODFLOW-NWT_1.1.2'
+    dirname = mfnwtdir
     srcdir = os.path.join(dirname, 'src')
 
-    # Download the MODFLOW-2005 distribution
-    url = "http://water.usgs.gov/ogw/modflow-nwt/{0}.zip".format(dirname)
+    # Download the MODFLOW-NWT distribution
+    url = mfnwturl
     pymake.download_and_unzip(url)
 
     # compile code
@@ -170,11 +179,11 @@ def test_build_usg():
     os.chdir(dstpth)
 
     # Set dir name
-    dirname = 'mfusg.1_3'
+    dirname = mfusgdir
     srcdir = os.path.join(dirname, 'src')
 
-    # Download the MODFLOW-2005 distribution
-    url = 'http://water.usgs.gov/ogw/mfusg/{0}.zip'.format(dirname)
+    # Download the MODFLOW-USG distribution
+    url = mfusgurl
     pymake.download_and_unzip(url)
 
     # compile code
