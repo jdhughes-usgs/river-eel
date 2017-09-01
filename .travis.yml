@@ -131,6 +131,7 @@ install:
     - pip install -r requirements.travis.txt
     - pip install https://github.com/modflowpy/flopy/zipball/develop
     - pip install https://github.com/modflowpy/pymake/zipball/master
+    - pip install nose-timer
 
 
 script:
@@ -139,4 +140,4 @@ script:
     - which nosetests
     - nosetests --version
     - cd autotest
-    - nosetests -v
+    - nosetests -v --with-id --with-timer
